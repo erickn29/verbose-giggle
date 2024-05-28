@@ -22,6 +22,173 @@ python-multipart = "^0.0.9"
 alembic = "^1.13.1"
 
 
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.1"
+pytest-asyncio = "^0.23.7"
+pytest-env = "^1.1.3"
+pytest-mock = "^3.14.0"
+pytest-sqlalchemy = "^0.2.1"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+ruff = "^0.4.5"
+bandit = "^1.7.8"
+
+
+[tool.black]
+extend-exclude = 'migrations'
+include = '\.pyi?$'
+line-length = 88
+target-version = ['py312']
+
+
+[tool.ruff]
+lint.ignore = []
+lint.select = [
+  "E", # pycodestyle
+  "F", # Pyflakes
+  "UP", # pyupgrade
+  "B", # flake8-bugbear
+  "SIM", # flake8-simplify
+  "I", # isort
+]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+lint.fixable = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+]
+lint.unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "*migrations*",
+]
+
+
+# Same as Black.
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+target-version = "py312"
+
+
+[tool.ruff.lint.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 18
+
+
+[tool.bandit]
+exclude_dirs = [".venv"]
+targets = ["src", "tests"]
+
+
+[tool.bandit.assert_used]
+skips = ['*_test.py', '*/test_*.py']
+
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+lines-between-types = 1
+section-order = ["future", "standard-library", "first-party", "local-folder", "third-party"]
+
+
+[tool.pytest.ini_options]
+FASTAPI_SETTINGS_MODULE = "src.config"
+addopts = "-p no:warnings"
+env_override_existing_values = 1
+env_files = ["secrets/.envfile"]
+python_files = "test_*.py"
+pythonpath = ". src"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest_env]
+TEST_MODE = "True"
+HOST = {value = "localhost", skip_if_set = true}
+PORT = {value = "8000", skip_if_set = true}
+DEBUG = "True"
+AWS_ACCESS_KEY_ID = ""
+AWS_SECRET_ACCESS_KEY = ""
+AWS_STATIC_BUCKET = "test_static"
+AWS_MEDIA_BUCKET = "test_media"
+POSTGRES_DB = {value = "postgres", skip_if_set = false}
+POSTGRES_HOST = {value = "localhost", skip_if_set = true}
+POSTGRES_PORT = "5432"
+POSTGRES_USER = {value = "postgres", skip_if_set = true}
+POSTGRES_PASSWORD = {value = "postgres", skip_if_set = true}
+REDIS_HOST = {value = "redis", skip_if_set = true}
+REDIS_PORT = "6379"
+SECRET_KEY = "123"
