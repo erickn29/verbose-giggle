@@ -200,14 +200,14 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-secrets/.test.envfile
+project_secrets/.test.envfile
 .env
 .venv
 venv/
 ENV/
 env.bak/
 venv.bak/
-secrets/.envfile
+project_secrets/.envfile
 
 # Spyder project settings
 .spyderproject
@@ -236,10 +236,10 @@ tgbot/settings/dev.py
 
 .vscode
 
-secrets/cert/*
-secrets/env/*
+project_secrets/cert/*
+project_secrets/env/*
 
-!secrets/env/.envfile.example
+!project_secrets/env/.envfile.example
 !.gitkeep
 
 src/tmp_scripts/

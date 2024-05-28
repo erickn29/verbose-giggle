@@ -20,6 +20,8 @@ factory-boy = "^3.3.0"
 pydantic-settings = "^2.2.1"
 python-multipart = "^0.0.9"
 alembic = "^1.13.1"
+passlib = "^1.7.4"
+psycopg2-binary = "^2.9.9"
 
 
 [tool.poetry.group.test.dependencies]
@@ -160,10 +162,10 @@ section-order = ["future", "standard-library", "first-party", "local-folder", "t
 
 
 [tool.pytest.ini_options]
-FASTAPI_SETTINGS_MODULE = "src.config"
+#FASTAPI_SETTINGS_MODULE = "src.v1.core.config"
 addopts = "-p no:warnings"
 env_override_existing_values = 1
-env_files = ["secrets/.envfile"]
+env_files = ["project_secrets/.envfile"]
 python_files = "test_*.py"
 pythonpath = ". src"
 testpaths = ["tests"]
@@ -175,20 +177,20 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.pytest_env]
-TEST_MODE = "True"
-HOST = {value = "localhost", skip_if_set = true}
-PORT = {value = "8000", skip_if_set = true}
-DEBUG = "True"
-AWS_ACCESS_KEY_ID = ""
-AWS_SECRET_ACCESS_KEY = ""
-AWS_STATIC_BUCKET = "test_static"
-AWS_MEDIA_BUCKET = "test_media"
-POSTGRES_DB = {value = "postgres", skip_if_set = false}
-POSTGRES_HOST = {value = "localhost", skip_if_set = true}
-POSTGRES_PORT = "5432"
-POSTGRES_USER = {value = "postgres", skip_if_set = true}
-POSTGRES_PASSWORD = {value = "postgres", skip_if_set = true}
-REDIS_HOST = {value = "redis", skip_if_set = true}
-REDIS_PORT = "6379"
-SECRET_KEY = "123"
+#[tool.pytest_env]
+#TEST_MODE = "True"
+#HOST = {value = "localhost", skip_if_set = true}
+#PORT = {value = "8000", skip_if_set = true}
+#DEBUG = "True"
+#AWS_ACCESS_KEY_ID = ""
+#AWS_SECRET_ACCESS_KEY = ""
+#AWS_STATIC_BUCKET = "test_static"
+#AWS_MEDIA_BUCKET = "test_media"
+#POSTGRES_DB = {value = "postgres2", skip_if_set = true}
+#POSTGRES_HOST = {value = "localhost", skip_if_set = true}
+#POSTGRES_PORT = "5432"
+#POSTGRES_USER = {value = "postgres", skip_if_set = true}
+#POSTGRES_PASSWORD = {value = "postgres", skip_if_set = true}
+#REDIS_HOST = {value = "redis", skip_if_set = true}
+#REDIS_PORT = "6379"
+#SECRET_KEY = "123"
