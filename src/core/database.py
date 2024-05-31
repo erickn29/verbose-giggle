@@ -6,7 +6,7 @@ from typing import Annotated, Any
 
 from sqlalchemy import UUID, func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, Mapped
 from core.config import cfg
 
 
@@ -45,4 +45,6 @@ updated_at = Annotated[
 
 
 class Base(DeclarativeBase):
-    id: Any
+    id: Mapped[uuid_pk]
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=f"{Path(__file__).resolve().parent.parent.parent}"
-        f"/project_secrets/.envfile"
+        f"/secret/.envfile"
     )
 
     # main
