@@ -2,12 +2,12 @@ import uuid
 
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
+from core.config import cfg
 from sqlalchemy import UUID, func
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, mapped_column, sessionmaker, Mapped
-from core.config import cfg
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 
 DATABASE_URL = cfg.get_db_url(is_async=True)

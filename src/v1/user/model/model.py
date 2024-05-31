@@ -1,7 +1,6 @@
+from core.database import Base
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
-
-from core.database import Base
 
 
 class User(Base):
@@ -13,3 +12,4 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(32), doc="Электронная почта", unique=True)
     password: Mapped[str] = mapped_column(String(512), doc="Пароль")
     is_active: Mapped[bool] = mapped_column(doc="Активен", default=True)
+    is_admin: Mapped[bool] = mapped_column(doc="Админ", default=False)

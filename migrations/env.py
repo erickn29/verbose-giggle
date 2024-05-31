@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from core.config import cfg
-from v1.user.model.model import User
+from v1.user.model.model import *
+from v1.vacancy.model.model import *
 
 from core.database import Base
 

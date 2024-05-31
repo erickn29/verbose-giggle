@@ -1,7 +1,7 @@
+from core.config import cfg
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from core.config import cfg
 
 
 app = FastAPI(

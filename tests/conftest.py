@@ -6,14 +6,14 @@ from uuid import uuid4
 
 import pytest
 
+from core.config import cfg
+from core.database import Base
 from httpx import AsyncClient
 from main import app
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
-from core.config import cfg
-from core.database import Base
 
 
 @pytest.fixture(scope="session")
