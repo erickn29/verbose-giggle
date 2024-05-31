@@ -1,10 +1,9 @@
 from enum import Enum
 from uuid import UUID
 
-from sqlalchemy.dialects import postgresql
-
 from core.database import Base
-from sqlalchemy import ForeignKey, String, Text, Integer, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -81,7 +80,7 @@ class Company(Base):
 
 class Vacancy(Base):
     __tablename__ = "vacancy"
-    __table_args__ = (UniqueConstraint('company_id', 'title', name='uq_company_title'),)
+    __table_args__ = (UniqueConstraint("company_id", "title", name="uq_company_title"),)
 
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
