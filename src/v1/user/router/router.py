@@ -17,7 +17,7 @@ async def user_list(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     user_service = UserService(session)
-    return await user_service.all(["email"])
+    return await user_service.all()
 
 
 @router.post('/', response_model=UserOutputSchema)
