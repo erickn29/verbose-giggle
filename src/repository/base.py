@@ -1,11 +1,19 @@
 from abc import ABC, abstractmethod
 
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.database import Base
+
 
 class BaseAsyncRepository(ABC):
-    model = None
+
+    def __init__(self, session: AsyncSession, model: Base) -> None:
+        self.session = session
+        self.model = model
 
     @abstractmethod
-    async def create(self, model):
+    async def create(self, obj):
         raise NotImplementedError
 
     @abstractmethod
@@ -17,11 +25,13 @@ class BaseAsyncRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def update(self, id, model):
+    async def update(self, id, data):
         raise NotImplementedError
 
     @abstractmethod
-    async def fetch(
-        self, filters: dict = None, order_by: list = None, paginate: dict = None
-    ):
+    async def all(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def filter(self, filters: dict, order_by: list = None):
         raise NotImplementedError
