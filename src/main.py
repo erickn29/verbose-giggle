@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from v1.router import v1_routers
 
 app = FastAPI(
     title="Python Russia",
@@ -23,11 +24,4 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root():
-    return {"message": cfg.SECRET_KEY}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+app.include_router(v1_routers)

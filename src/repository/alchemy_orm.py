@@ -1,9 +1,8 @@
-from select import select
 from typing import List, Sequence
 
 from fastapi import HTTPException
 from pydantic import BaseModel, UUID4
-from sqlalchemy import insert, and_, Row, RowMapping
+from sqlalchemy import select, insert, and_, Row, RowMapping
 from sqlalchemy.exc import IntegrityError
 
 from core.database import Base
@@ -14,16 +13,15 @@ class SQLAlchemyRepository(BaseAsyncRepository):
 
     async def create(self, obj: BaseModel) -> Base | None:
         stmt = insert(self.model).values(**obj.model_dump()).returning(self.model)
-        result = await self.session.execute(stmt)
         try:
             async with self.session:
+                result = await self.session.execute(stmt)
                 await self.session.commit()
                 return result.scalar_one_or_none()
-        except IntegrityError as e:
-            print(e)
+        except IntegrityError:
             await self.session.rollback()
             await self.session.close()
-            return
+            raise HTTPException(status_code=400, detail="Already Exists")
 
     async def get(self, id: UUID4) -> Base | None:
         query = select(self.model).where(self.model.id == id)
@@ -57,9 +55,9 @@ class SQLAlchemyRepository(BaseAsyncRepository):
     async def all(self, order_by: list = None) -> Sequence[Base]:
         order_by = order_by or [self.model.created_at.desc()]
         query = select(self.model).order_by(*order_by)
-        async with self.session:
+        async with self.session.begin():
             result = await self.session.execute(query)
-        return result.scalars().all()
+            return result.scalars().all()
 
     async def filter(self, filters: dict, order_by: list = None) -> Sequence[Base]:
         """
