@@ -33,7 +33,6 @@ class UserService(BaseService):
 
     async def all(self, order_by: list = None):
         res = await self.repository.all(order_by)
-
         return UserListOutputSchema(users=[
             UserOutputSchema(
                 id=obj.id,

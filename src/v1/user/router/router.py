@@ -23,7 +23,7 @@ async def user_list(
 @router.post('/', response_model=UserOutputSchema)
 async def create_user(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    data: Annotated[UserCreateSchema, Body(...)]
+    data: Annotated[UserCreateSchema, Body(...)],
 ):
     user_service = UserService(session)
     return await user_service.create(data)
