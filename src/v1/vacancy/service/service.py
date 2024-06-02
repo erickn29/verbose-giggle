@@ -1,5 +1,3 @@
-from typing import List
-
 from service.base import BaseService
 from sqlalchemy.ext.asyncio import AsyncSession
 from v1.vacancy.model.model import City, Company, Tool, Vacancy
@@ -11,10 +9,11 @@ from v1.vacancy.repository.repository import (
     VacancyToolRepository,
 )
 from v1.vacancy.schema.schema import (
+    ToolOutputSchema,
     VacancyCreateSchema,
     VacancyListOutputSchema,
     VacancyOutputSchema,
-    VacancyToolSchema, ToolOutputSchema, ToolInputSchema,
+    VacancyToolSchema,
 )
 
 
@@ -60,8 +59,8 @@ class VacancyService(BaseService):
         return output
 
     async def all(self, order_by: list = None):
-        vacancies: List[Vacancy] = await self.repository.all()
-        vacancies_list: List[VacancyOutputSchema] = []
+        vacancies: list[Vacancy] = await self.repository.all()
+        vacancies_list: list[VacancyOutputSchema] = []
         for vacancy in vacancies:
             obj = VacancyOutputSchema.from_orm(vacancy)
             if vacancy.tools:
