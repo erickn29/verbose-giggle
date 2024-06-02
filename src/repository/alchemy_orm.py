@@ -43,12 +43,16 @@ class SQLAlchemyRepository(BaseAsyncRepository):
 
     async def update(self, id: UUID4, data: BaseModel) -> Base | None:
         obj = await self.get(id)
+        if not obj:
+            return
         for field, value in data.dict(exclude_unset=True).items():
             if value:
                 setattr(obj, field, value)
         try:
             async with self.session:
+                self.session.add(obj)
                 await self.session.commit()
+                await self.session.refresh(obj)
                 return obj
         except IntegrityError as e:
             await self.session.rollback()
