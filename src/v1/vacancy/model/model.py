@@ -3,45 +3,44 @@ from uuid import UUID
 
 from core.database import Base
 from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Language(Enum):
-    python = "Python"
-    javascript = "JavaScript"
-    java = "Java"
-    golang = "Go"
-    php = "PHP"
-    plus_plus = "C++"
-    sharp = "C#"
-    sql = "SQL"
-    rust = "Rust"
+    python = "python"
+    javascript = "javascript"
+    java = "java"
+    golang = "go"
+    php = "php"
+    plus_plus = "c++"
+    sharp = "c#"
+    sql = "sql"
+    rust = "rust"
 
 
 class Experience(Enum):
-    no_experience = "Без опыта"
-    one_to_three = "От 1 до 3 лет"
-    three_to_five = "От 3 до 5 лет"
-    more_than_five = "Более 5 лет"
+    no_experience = "без опыта"
+    one_to_three = "от 1 до 3 лет"
+    three_to_five = "от 3 до 5 лет"
+    more_than_five = "более 5 лет"
 
 
 class Speciality(Enum):
-    developer = "Developer"
-    analyst = "Analyst"
-    devops = "DevOps"
-    system_administrator = "System Administrator"
-    data_science = "Data Science"
-    machine_learning = "Machine Learning"
-    project_manager = "Project Management"
-    team_lead = "Team Lead"
-    architect = "Architect"
+    developer = "разработчик"
+    analyst = "аналитик"
+    devops = "devops"
+    system_administrator = "системный администратор"
+    data_science = "дата-инженер"
+    machine_learning = "машинное обучение"
+    project_manager = "менеджер проектов"
+    team_lead = "тимлид"
+    architect = "архитектор"
 
 
 class Tool(Base):
     __tablename__ = "tool"
 
-    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     vacancies: Mapped[list["VacancyTool"]] = relationship(
         "VacancyTool",
         back_populates="tool",
@@ -84,18 +83,9 @@ class Vacancy(Base):
 
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    language: Mapped[str] = mapped_column(
-        postgresql.ENUM(*[o.value for o in Language], name="language"),
-        doc="Страница сайта",
-    )
-    speciality: Mapped[str] = mapped_column(
-        postgresql.ENUM(*[o.value for o in Speciality], name="speciality"),
-        doc="Страница сайта",
-    )
-    experience: Mapped[str] = mapped_column(
-        postgresql.ENUM(*[o.value for o in Experience], name="experience"),
-        doc="Страница сайта",
-    )
+    language: Mapped[str] = mapped_column(String(16), nullable=False)
+    speciality: Mapped[str] = mapped_column(String(32), nullable=False)
+    experience: Mapped[str] = mapped_column(String(32), nullable=False)
     salary_from: Mapped[int] = mapped_column(Integer, nullable=True)
     salary_to: Mapped[int] = mapped_column(Integer, nullable=True)
     company_id: Mapped[UUID] = mapped_column(

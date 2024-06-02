@@ -1,11 +1,13 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Body
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.database import get_async_session
-from v1.user.schema.schema import UserOutputSchema, UserCreateSchema, \
-    UserListOutputSchema
+from fastapi import APIRouter, Body, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from v1.user.schema.schema import (
+    UserCreateSchema,
+    UserListOutputSchema,
+    UserOutputSchema,
+)
 from v1.user.service.service import UserService
 
 
@@ -20,7 +22,7 @@ async def user_list(
     return await user_service.all()
 
 
-@router.post('/', response_model=UserOutputSchema)
+@router.post("/", response_model=UserOutputSchema)
 async def create_user(
     session: Annotated[AsyncSession, Depends(get_async_session)],
     data: Annotated[UserCreateSchema, Body(...)],

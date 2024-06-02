@@ -1,36 +1,32 @@
-from abc import ABC, abstractmethod
+from uuid import UUID
 
+from pydantic import BaseModel
+from repository.base import BaseAsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from repository.alchemy_orm import SQLAlchemyRepository
-from repository.base import BaseAsyncRepository
 
-
-class BaseService(ABC):
+class BaseService:
     def __init__(self, session: AsyncSession, repository: BaseAsyncRepository):
         self.session = session
         self.repository = repository(session=session)
 
-    @abstractmethod
-    async def create(self, obj):
-        raise NotImplementedError
+    async def create(self, obj: BaseModel):
+        return await self.repository.create(obj)
 
-    @abstractmethod
-    async def get(self, id):
-        raise NotImplementedError
+    async def get(self, id: UUID):
+        return await self.repository.get(id)
 
-    @abstractmethod
-    async def delete(self, id):
-        raise NotImplementedError
+    async def delete(self, id: UUID):
+        return await self.repository.delete(id)
 
-    @abstractmethod
-    async def update(self, id, data):
-        raise NotImplementedError
+    async def update(self, id: UUID, data: BaseModel):
+        return await self.repository.update(id, data)
 
-    @abstractmethod
-    async def all(self):
-        raise NotImplementedError
+    async def all(self, order_by: list = None):
+        return await self.repository.all(order_by)
 
-    @abstractmethod
     async def filter(self, filters: dict, order_by: list = None):
-        raise NotImplementedError
+        return await self.repository.filter(filters, order_by)
+
+    async def get_or_create(self, obj: BaseModel):
+        return await self.repository.get_or_create(obj)

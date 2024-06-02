@@ -1,12 +1,11 @@
-from typing import List, Sequence
-
-from fastapi import HTTPException
-from pydantic import BaseModel, UUID4
-from sqlalchemy import select, insert, and_, Row, RowMapping
-from sqlalchemy.exc import IntegrityError
+from collections.abc import Sequence
 
 from core.database import Base
+from fastapi import HTTPException
+from pydantic import UUID4, BaseModel
 from repository.base import BaseAsyncRepository
+from sqlalchemy import and_, insert, select
+from sqlalchemy.exc import IntegrityError
 
 
 class SQLAlchemyRepository(BaseAsyncRepository):
@@ -21,7 +20,10 @@ class SQLAlchemyRepository(BaseAsyncRepository):
         except IntegrityError:
             await self.session.rollback()
             await self.session.close()
-            raise HTTPException(status_code=400, detail="Already Exists")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Already Exists ({self.model.__name__})",
+            )
 
     async def get(self, id: UUID4) -> Base | None:
         query = select(self.model).where(self.model.id == id)
@@ -32,6 +34,8 @@ class SQLAlchemyRepository(BaseAsyncRepository):
 
     async def delete(self, id: UUID4):
         obj = await self.get(id)
+        if not obj:
+            raise HTTPException(status_code=404, detail="Not Found")
         async with self.session:
             await self.session.delete(obj)
             await self.session.commit()
@@ -47,10 +51,9 @@ class SQLAlchemyRepository(BaseAsyncRepository):
                 await self.session.commit()
                 return obj
         except IntegrityError as e:
-            print(e)
             await self.session.rollback()
             await self.session.close()
-            return
+            raise HTTPException(status_code=400, detail=e.args[0])
 
     async def all(self, order_by: list = None) -> Sequence[Base]:
         order_by = order_by or [self.model.created_at.desc()]
@@ -97,7 +100,7 @@ class SQLAlchemyRepository(BaseAsyncRepository):
         return result.scalars().all()
 
     async def get_or_create(self, obj: BaseModel) -> Base | None:
-        obj_in_db = await self.filter(**obj.model_dump())
+        obj_in_db = await self.filter(obj.model_dump())
         if obj_in_db:
             return obj_in_db[0]
         result = await self.create(obj)

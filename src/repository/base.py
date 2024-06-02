@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.database import Base
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BaseAsyncRepository(ABC):

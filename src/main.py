@@ -2,8 +2,8 @@ from core.config import cfg
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
-
 from v1.router import v1_routers
+
 
 app = FastAPI(
     title="Python Russia",

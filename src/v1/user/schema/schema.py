@@ -1,6 +1,6 @@
+from datetime import datetime
 from uuid import UUID
 
-from fastapi.openapi.models import Schema
 from pydantic import BaseModel
 
 
@@ -26,6 +26,8 @@ class UserOutputSchema(BaseModel):
     last_name: str
     patronymic: str | None = None
     email: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class UserListOutputSchema(BaseModel):
