@@ -3,16 +3,14 @@ import random
 import factory
 
 from factory.alchemy import SQLAlchemyModelFactory
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from v1.vacancy.model.model import (
-    Vacancy,
-    Speciality,
-    Language,
-    Experience,
     City,
     Company,
+    Experience,
+    Language,
+    Speciality,
     Tool,
+    Vacancy,
     VacancyTool,
 )
 

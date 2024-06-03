@@ -1,7 +1,12 @@
 import pytest
 
-from utils.factory.vacancy import ToolFactory, CityFactory, CompanyFactory, \
-    VacancyFactory, VacancyToolFactory
+from utils.factory.vacancy import (
+    CityFactory,
+    CompanyFactory,
+    ToolFactory,
+    VacancyFactory,
+    VacancyToolFactory,
+)
 
 
 @pytest.fixture(scope="session")

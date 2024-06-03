@@ -10,10 +10,9 @@ import pytest
 import pytest_asyncio
 
 from core.config import cfg
-from core.database import get_async_session
+from core.database import Base, get_async_session
 from httpx import AsyncClient
 from main import app
-from core.database import Base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -102,4 +101,3 @@ async def client(session) -> AsyncGenerator[AsyncClient, None]:
 #
 #     response = await client.post("/api/v1/auth/login/", data=data)
 #     return {"Authorization": f"Bearer {response.json()['access_token']}"}
-
