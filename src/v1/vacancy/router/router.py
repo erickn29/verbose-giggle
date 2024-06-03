@@ -23,7 +23,7 @@ async def vacancy_list(
     return await vacancy_service.all()
 
 
-@router.get("/{vacancy_id}", response_model=VacancyOutputSchema)
+@router.get("/{vacancy_id}/", response_model=VacancyOutputSchema)
 async def vacancy_detail(
     vacancy_id: Annotated[UUID, Path(...)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -32,7 +32,7 @@ async def vacancy_detail(
     return await vacancy_service.get(vacancy_id)
 
 
-@router.post("/", response_model=VacancyOutputSchema)
+@router.post("/", response_model=VacancyOutputSchema, status_code=201)
 async def create_vacancy(
     session: Annotated[AsyncSession, Depends(get_async_session)],
     data: Annotated[VacancyCreateSchema, Body(...)],
@@ -41,7 +41,7 @@ async def create_vacancy(
     return await vacancy_service.create(data)
 
 
-@router.put("/{vacancy_id}", response_model=VacancyOutputSchema)
+@router.put("/{vacancy_id}/", response_model=VacancyOutputSchema, status_code=201)
 async def update_vacancy(
     vacancy_id: Annotated[UUID, Path(...)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
@@ -51,7 +51,7 @@ async def update_vacancy(
     return await vacancy_service.update(vacancy_id, data)
 
 
-@router.delete("/{vacancy_id}")
+@router.delete("/{vacancy_id}/", status_code=204)
 async def delete_vacancy(
     vacancy_id: Annotated[UUID, Path(...)],
     session: Annotated[AsyncSession, Depends(get_async_session)],

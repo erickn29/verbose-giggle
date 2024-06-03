@@ -26,8 +26,11 @@ class VacancyService(BaseService):
 
     async def get(self, vacancy_id: UUID):
         vacancy = await self.repository.get(vacancy_id)
-        tool = vacancy.tools
 
+        if vacancy is None:
+            raise HTTPException(status_code=404, detail="Vacancy not found")
+
+        tool = vacancy.tools
         output = VacancyOutputSchema.from_orm(vacancy)
         output.tool = [t.tool for t in tool]
         return output
@@ -60,7 +63,7 @@ class VacancyService(BaseService):
         return output
 
     async def update(self, id: UUID, vacancy_update_schema: VacancyCreateSchema):
-        if not self.repository.get(id):
+        if not await self.repository.get(id):
             raise HTTPException(status_code=404, detail="Vacancy not found")
 
         vacancy_schema = await self.get_vacancy_schema_object(vacancy_update_schema)

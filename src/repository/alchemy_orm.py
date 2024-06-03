@@ -1,5 +1,7 @@
 from collections.abc import Sequence
 
+from asyncpg import UniqueViolationError
+
 from core.database import Base
 from fastapi import HTTPException
 from pydantic import UUID4, BaseModel
