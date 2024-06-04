@@ -29,7 +29,7 @@ async def vacancy_detail(
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ):
     vacancy_service = VacancyService(session)
-    return await vacancy_service.get(vacancy_id)
+    return await vacancy_service.get_schema(vacancy_id)
 
 
 @router.post("/", response_model=VacancyOutputSchema, status_code=201)

@@ -109,3 +109,6 @@ class SQLAlchemyRepository(BaseAsyncRepository):
             return obj_in_db[0]
         result = await self.create(obj)
         return result
+
+    # async def get_fk_field_value(self, fk_model: Base, field_name: str):
+    #     query = select(self.model)
