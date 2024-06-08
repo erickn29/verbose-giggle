@@ -52,7 +52,7 @@ class Tool(Base):
 class City(Base):
     __tablename__ = "city"
 
-    name: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     companies: Mapped[list["Company"]] = relationship(
         "Company",
         back_populates="city",
@@ -63,7 +63,7 @@ class City(Base):
 class Company(Base):
     __tablename__ = "company"
 
-    name: Mapped[str] = mapped_column(String(32), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     city_id: Mapped[UUID] = mapped_column(
         ForeignKey("city.id", ondelete="CASCADE"),

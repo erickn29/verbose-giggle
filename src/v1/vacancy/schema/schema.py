@@ -76,6 +76,8 @@ SpecialityLiteral = Literal[
     Speciality.project_manager.value,
     Speciality.team_lead.value,
     Speciality.architect.value,
+    Speciality.qa.value,
+    Speciality.cyber_security.value
 ]
 
 

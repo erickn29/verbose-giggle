@@ -7,6 +7,16 @@ class Analyzer:
             "devops",
             "девопс"
         ),
+        Speciality.machine_learning.value: (
+            "nlp",
+            "llm",
+            "ds",
+            "deep learning",
+            "машинное",
+            "machine learning",
+            "машинного",
+            "нейронщик",
+        ),
         Speciality.analyst.value: (
             "аналитик",
             "analyst",
@@ -16,6 +26,7 @@ class Analyzer:
             'руководитель отдела аналитики',
             "системный аналитик",
             "system analyst",
+            "bi",
         ),
         Speciality.data_science.value: (
             "дата-сайентист",
@@ -26,6 +37,7 @@ class Analyzer:
             "базы данных",
             "баз данных",
             "data",
+            "data science",
         ),
         Speciality.project_manager.value: (
             "менеджер продукта",
@@ -61,6 +73,7 @@ class Analyzer:
             "тимлид",
             "teamlead",
             "руководитель команды разработки",
+            "TeamLead",
         ),
         Speciality.system_administrator.value: (
             "системный администратор",
@@ -83,7 +96,7 @@ class Analyzer:
     LANGUAGES_MAPPING = {
         ("Python", "python"): Language.python.value,
         ("PHP",): Language.php.value,
-        ("C++", "С++", "СС++"): Language.plus_plus.value,
+        ("C++", "С++", "СС++", "C", "С/С++"): Language.plus_plus.value,
         ("C#", "С#"): Language.sharp.value,
         (
             "JavaScript",
@@ -106,7 +119,7 @@ class Analyzer:
     HH_EXPERIENCE = {
         "noExperience": Experience.no_experience.value,
         "between1And3": Experience.one_to_three.value,
-        "between3And6": Experience.three_to_five,
+        "between3And6": Experience.three_to_five.value,
         "moreThan6": Experience.more_than_five.value,
     }
 
@@ -144,11 +157,14 @@ class Analyzer:
             .replace("</li>", "")
             .replace("<ul>", "")
             .replace("</ul>", "")
+            .replace("<>", "")
+            .replace(",", "")
         )
         return clean_text
 
     def _match_language(self, text: str) -> str | None:
-        for word in self._clean_text(text).split(" "):
+        cleaned_list = self._clean_text(text).split(" ")
+        for word in cleaned_list:
             for lang_tuple, lang_name in Analyzer.LANGUAGES_MAPPING.items():
                 if word in lang_tuple:
                     return lang_name
@@ -161,20 +177,26 @@ class Analyzer:
 
     def get_language(self):
         if self.title:
-            return self._match_language(self.title)
+            if language := self._match_language(self.title):
+                return language
         if self.description:
-            return self._match_language(self.description)
+            if language := self._match_language(self.description):
+                return language
         if self.tools:
-            return self._match_language(" ".join(self.tools))
+            if language := self._match_language(" ".join(self.tools)):
+                return language
 
     def get_speciality(self):
         if self.title:
-            return self._match_speciality(self.title)
+            if speciality := self._match_speciality(self.title):
+                return speciality
         if self.description:
-            return self._match_speciality(self.description)
+            if speciality := self._match_speciality(self.description):
+                return speciality
         if self.tools:
-            return self._match_speciality(" ".join(self.tools))
+            if speciality := self._match_speciality(" ".join(self.tools)):
+                return speciality
 
     def get_head_hunter_experience(self):
         if self.experience:
-            return self.HH_EXPERIENCE.get(self.experience).value
+            return self.HH_EXPERIENCE.get(self.experience)

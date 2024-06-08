@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from pprint import pprint
@@ -5,7 +6,9 @@ from pprint import pprint
 import requests
 
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
+from core.database import get_async_session
 from utils.parser.analyzer import Analyzer
 from v1.vacancy.schema.schema import (
     CityInputSchema,
@@ -13,6 +16,7 @@ from v1.vacancy.schema.schema import (
     ToolInputSchema,
     VacancyCreateSchema, VacancyInputSchema,
 )
+from v1.vacancy.service.service import VacancyService
 
 
 class BaseParser:
@@ -130,32 +134,24 @@ class HeadHunterParser(BaseParser):
                 ToolInputSchema(name=tool)
                 for tool in skills.get("keySkill") or []
             ]
-        vacancy_data_list = [
-            vacancy_data.get("name"),
-            (
-                vacancy_data.get("compensation").get("from")
-                if vacancy_data.get("compensation")
-                else None
-            ),
-            (
-                vacancy_data.get("compensation").get("to")
-                if vacancy_data.get("compensation")
-                else None
-            ),
-            vacancy_data.get("description"),
-        ]
-        if not all(vacancy_data_list):
-            print(f"No vacancy data found {link}")
+        if not vacancy_data.get("compensation"):
+            print(f"No compensation data found {link}")
+        salary_from = vacancy_data["compensation"].get("from")
+        salary_to = vacancy_data["compensation"].get("to")
+        if not any([salary_from, salary_to]):
+            print(f"No salary data found (from, to) {link}")
             return
         salary_from = (
-            vacancy_data["compensation"]["from"] * self.DOLLAR_TO_RUB
+            salary_from * self.DOLLAR_TO_RUB
             if vacancy_data["compensation"]["currencyCode"] != self.RUR_CODE
-            else vacancy_data["compensation"]["from"]
+            and salary_from
+            else salary_from
         )
         salary_to = (
-            vacancy_data["compensation"]["to"] * self.DOLLAR_TO_RUB
+            salary_to * self.DOLLAR_TO_RUB
             if vacancy_data["compensation"]["currencyCode"] != self.RUR_CODE
-            else vacancy_data["compensation"]["to"]
+            and salary_to
+            else salary_to
         )
         analyzer = Analyzer(
             title=vacancy_data.get("name"),
@@ -173,7 +169,7 @@ class HeadHunterParser(BaseParser):
                 experience,
             ]
         ):
-            print(f"No vacancy data found {link}")
+            print(f"No vacancy data found ({language}, {speciality}, {experience}) {link}")
             return
         vacancy = VacancyInputSchema(
             title=vacancy_data.get("name"),
@@ -192,7 +188,23 @@ class HeadHunterParser(BaseParser):
         )
         return vacancy_schema
 
+    async def create_vacancy(self):
+        links = self.get_vacancies_links()
+        for link in tqdm(links):
+            vacancy_schema = self.get_vacancy_schema(link)
+            async with get_async_session() as session:
+                vacancy_service = VacancyService(session=session)
+                await vacancy_service.create(vacancy_schema)
 
-parser = HeadHunterParser()
-# pprint(parser.get_vacancies_links())
-pprint(parser.get_vacancy_schema("https://arkhangelsk.hh.ru/vacancy/98444719?query=python&hhtmFrom=vacancy_search_list").dict())
+
+async def main():
+    parser = HeadHunterParser()
+    await parser.create_vacancy()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+# schema = parser.get_vacancy_schema(
+#     "https://arkhangelsk.hh.ru/vacancy/99385300?query=python&hhtmFrom=vacancy_search_list"
+# )
+# if schema:
+#     pprint(schema.dict())
