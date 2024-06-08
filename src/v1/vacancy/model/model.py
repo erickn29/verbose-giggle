@@ -26,15 +26,17 @@ class Experience(Enum):
 
 
 class Speciality(Enum):
-    developer = "разработчик"
-    analyst = "аналитик"
+    developer = "разработка"
+    analyst = "аналитика"
     devops = "devops"
-    system_administrator = "системный администратор"
-    data_science = "дата-инженер"
+    system_administrator = "системное администрирование"
+    data_science = "дата-инженерия"
     machine_learning = "машинное обучение"
-    project_manager = "менеджер проектов"
-    team_lead = "тимлид"
-    architect = "архитектор"
+    project_manager = "управление проектами"
+    team_lead = "руководство разработкой"
+    architect = "архитектура проектов"
+    cyber_security = "информационная безопасность"
+    qa = "тестирование"
 
 
 class Tool(Base):

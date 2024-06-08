@@ -42,7 +42,9 @@ class VacancyService(BaseService):
             raise HTTPException(status_code=404, detail="Vacancy not found")
         return vacancy
 
-    async def create(self, vacancy_create_schema: VacancyCreateSchema) -> VacancyOutputSchema:
+    async def create(
+        self, vacancy_create_schema: VacancyCreateSchema
+    ) -> VacancyOutputSchema:
         vacancy_schema = await self.get_vacancy_schema_object(vacancy_create_schema)
 
         tool_service = ToolService(session=self.session)
@@ -69,7 +71,9 @@ class VacancyService(BaseService):
         output.tool = tool
         return output
 
-    async def update(self, id: UUID, vacancy_update_schema: VacancyCreateSchema) -> VacancyOutputSchema:
+    async def update(
+        self, id: UUID, vacancy_update_schema: VacancyCreateSchema
+    ) -> VacancyOutputSchema:
         if not await self.repository.get(id):
             raise HTTPException(status_code=404, detail="Vacancy not found")
 
