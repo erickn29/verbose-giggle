@@ -5,11 +5,13 @@ from pprint import pprint
 import requests
 
 from bs4 import BeautifulSoup
+
+from utils.parser.analyzer import Analyzer
 from v1.vacancy.schema.schema import (
     CityInputSchema,
     CompanyInputSchema,
     ToolInputSchema,
-    VacancyCreateSchema,
+    VacancyCreateSchema, VacancyInputSchema,
 )
 
 
@@ -111,22 +113,22 @@ class HeadHunterParser(BaseParser):
         return vacancy_dict["vacancyView"]
 
     def get_vacancy_schema(self, link: str) -> VacancyCreateSchema | None:
-        vacancy_data = self.get_vacancy_data(link)
+        vacancy_data: dict = self.get_vacancy_data(link)
         if not vacancy_data:
             print(f"No vacancy data found {link}")
             return
-        if not vacancy_data.get("area") or vacancy_data.get("area").get("name"):
+        if not vacancy_data.get("area") or not vacancy_data.get("area").get("name"):
             print(f"No area data found {link}")
             return
         city = CityInputSchema(name=vacancy_data.get("area").get("name"))
-        if not vacancy_data.get("company") or vacancy_data.get("company").get("name"):
+        if not vacancy_data.get("company") or not vacancy_data.get("company").get("name"):
             print(f"No company data found {link}")
         company = CompanyInputSchema(name=vacancy_data.get("company").get("name"))
         tools = []
         if skills := vacancy_data.get("keySkills"):
             tools = [
                 ToolInputSchema(name=tool)
-                for tool in skills.get("keySkill").get("keySkill") or []
+                for tool in skills.get("keySkill") or []
             ]
         vacancy_data_list = [
             vacancy_data.get("name"),
@@ -155,17 +157,42 @@ class HeadHunterParser(BaseParser):
             if vacancy_data["compensation"]["currencyCode"] != self.RUR_CODE
             else vacancy_data["compensation"]["to"]
         )
-        vacancy = VacancyCreateSchema(
+        analyzer = Analyzer(
             title=vacancy_data.get("name"),
             description=vacancy_data.get("description"),
-            language="",
-            speciality="",
-            experience="",
+            tools=vacancy_data.get("keySkills").get("keySkill") if tools else [],
+            experience=vacancy_data.get("workExperience"),
+        )
+        language = analyzer.get_language()
+        speciality = analyzer.get_speciality()
+        experience = analyzer.get_head_hunter_experience()
+        if not all(
+            [
+                language,
+                speciality,
+                experience,
+            ]
+        ):
+            print(f"No vacancy data found {link}")
+            return
+        vacancy = VacancyInputSchema(
+            title=vacancy_data.get("name"),
+            description=vacancy_data.get("description"),
+            language=language,
+            speciality=speciality,
+            experience=experience,
             salary_from=salary_from,
             salary_to=salary_to,
         )
+        vacancy_schema = VacancyCreateSchema(
+            city=city,
+            company=company,
+            vacancy=vacancy,
+            tool=tools,
+        )
+        return vacancy_schema
 
 
 parser = HeadHunterParser()
 # pprint(parser.get_vacancies_links())
-pprint(parser.get_vacancy_schema())
+pprint(parser.get_vacancy_schema("https://arkhangelsk.hh.ru/vacancy/98444719?query=python&hhtmFrom=vacancy_search_list").dict())

@@ -32,6 +32,7 @@ class Analyzer:
             "менеджер проектов"
         ),
         Speciality.developer.value: (
+            "web-разработчик",
             "программист",
             "разработчик",
             "веб-разработчик",
@@ -129,6 +130,20 @@ class Analyzer:
             .replace("&gt;", "")
             .replace("/li", "")
             .replace("/ul", "")
+            .replace("<p>", "")
+            .replace("</p>", "")
+            .replace("<em>", "")
+            .replace("</em>", "")
+            .replace("<b>", "")
+            .replace("</b>", "")
+            .replace("<i>", "")
+            .replace("</i>", "")
+            .replace("<strong>", "")
+            .replace("</strong>", "")
+            .replace("<li>", "")
+            .replace("</li>", "")
+            .replace("<ul>", "")
+            .replace("</ul>", "")
         )
         return clean_text
 
@@ -146,19 +161,20 @@ class Analyzer:
 
     def get_language(self):
         if self.title:
-            self._match_language(self.title)
+            return self._match_language(self.title)
         if self.description:
-            self._match_language(self.description)
+            return self._match_language(self.description)
         if self.tools:
-            self._match_language(" ".join(self.tools))
+            return self._match_language(" ".join(self.tools))
 
     def get_speciality(self):
         if self.title:
-            self._match_speciality(self.title)
+            return self._match_speciality(self.title)
         if self.description:
-            self._match_speciality(self.description)
+            return self._match_speciality(self.description)
         if self.tools:
-            self._match_speciality(" ".join(self.tools))
+            return self._match_speciality(" ".join(self.tools))
 
     def get_head_hunter_experience(self):
-        return self.HH_EXPERIENCE.get(self.experience)
+        if self.experience:
+            return self.HH_EXPERIENCE.get(self.experience).value

@@ -102,6 +102,7 @@ class Vacancy(Base):
         back_populates="vacancy",
         lazy="selectin",
     )
+    link: Mapped[str] = mapped_column(Text, nullable=True)
 
 
 class VacancyTool(Base):
