@@ -49,6 +49,8 @@ class VacancyService(BaseService):
 
         tool_service = ToolService(session=self.session)
         tool = vacancy_create_schema.tool
+        for t in tool:
+            t.name = t.name.lower().replace(" ", "_")
 
         vacancy_obj: Vacancy = await self.repository.get_or_create(vacancy_schema)
 
@@ -81,6 +83,8 @@ class VacancyService(BaseService):
 
         tool_service = ToolService(session=self.session)
         tool = vacancy_update_schema.tool
+        for t in tool:
+            t.name = t.name.lower().replace(" ", "_")
 
         vacancy_obj: Vacancy = await self.repository.update(id, vacancy_schema)
 
