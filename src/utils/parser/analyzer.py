@@ -3,10 +3,7 @@ from v1.vacancy.model.model import Language, Speciality, Experience
 
 class Analyzer:
     SPECIALITIES = {
-        Speciality.devops.value: (
-            "devops",
-            "девопс"
-        ),
+        Speciality.devops.value: ("devops", "девопс"),
         Speciality.machine_learning.value: (
             "nlp",
             "llm",
@@ -23,7 +20,7 @@ class Analyzer:
             "бизнес-аналитик",
             "бизнес аналитик",
             "продуктовый аналитик",
-            'руководитель отдела аналитики',
+            "руководитель отдела аналитики",
             "системный аналитик",
             "system analyst",
             "bi",
@@ -39,14 +36,12 @@ class Analyzer:
             "data",
             "data science",
         ),
-        Speciality.project_manager.value: (
-            "менеджер продукта",
-            "менеджер проектов"
-        ),
+        Speciality.project_manager.value: ("менеджер продукта", "менеджер проектов"),
         Speciality.developer.value: (
             "web-разработчик",
             "программист",
             "разработчик",
+            "разработка",
             "веб-разработчик",
             "developer",
             "frontend-разработчик",
@@ -65,6 +60,11 @@ class Analyzer:
             "ml-разработчик",
             "инженер",
             "software engineer",
+            "веб-программирование",
+            "php-разработчик",
+            "php-программист",
+            "java-разработчик",
+            "software engineer",
         ),
         Speciality.team_lead.value: (
             "руководитель группы разработки",
@@ -73,7 +73,8 @@ class Analyzer:
             "тимлид",
             "teamlead",
             "руководитель команды разработки",
-            "TeamLead",
+            "руководитель отдела",
+            "помощник руководителя",
         ),
         Speciality.system_administrator.value: (
             "системный администратор",
@@ -90,21 +91,27 @@ class Analyzer:
             "qa-специалист",
             "автотестировщик",
             "тестированию",
+            "qa-engineer",
         ),
     }
 
     LANGUAGES_MAPPING = {
         ("Python", "python"): Language.python.value,
         ("PHP",): Language.php.value,
-        ("C++", "С++", "СС++", "C", "С/С++"): Language.plus_plus.value,
-        ("C#", "С#"): Language.sharp.value,
+        ("C++", "С++", "СС++", "C", "С/С++", "C/C++"): Language.plus_plus.value,
+        ("C#", "С#", "net", "Net", "NET"): Language.sharp.value,
         (
             "JavaScript",
             "JS",
+            "TypeScript",
             "react.js",
             "Frontend",
             "Node.JS",
+            "NodeJs",
+            "NodeJS",
+            "Nodejs",
             "React.js",
+            "Reactjs",
             "React",
             "Node.js",
             "Vue",
@@ -138,8 +145,7 @@ class Analyzer:
     @staticmethod
     def _clean_text(text: str) -> str:
         clean_text = (
-            text
-            .replace("&lt;", "")
+            text.replace("&lt;", "")
             .replace("&gt;", "")
             .replace("/li", "")
             .replace("/ul", "")
@@ -159,6 +165,12 @@ class Analyzer:
             .replace("</ul>", "")
             .replace("<>", "")
             .replace(",", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("-", " ")
+            .replace(".", "")
+            .replace(";", "")
+            .replace("/", " ")
         )
         return clean_text
 
