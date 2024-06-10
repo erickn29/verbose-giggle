@@ -1,4 +1,4 @@
-from v1.vacancy.model.model import Language, Speciality, Experience
+from v1.vacancy.model.model import Experience, Language, Speciality
 
 
 class Analyzer:

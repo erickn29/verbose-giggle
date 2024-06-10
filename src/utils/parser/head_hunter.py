@@ -2,17 +2,16 @@ import asyncio
 import json
 
 from bs4 import BeautifulSoup
+from core.database import async_session_maker
 from fastapi import HTTPException
 from tqdm import tqdm
-
-from core.database import get_async_session
 from utils.parser.analyzer import Analyzer
 from utils.parser.base import BaseParser
 from v1.vacancy.schema.schema import (
-    VacancyCreateSchema,
     CityInputSchema,
     CompanyInputSchema,
     ToolInputSchema,
+    VacancyCreateSchema,
     VacancyInputSchema,
 )
 from v1.vacancy.service.service import VacancyService
@@ -42,7 +41,7 @@ class HeadHunterParser(BaseParser):
             return page_count
         return content_dict["paging"]["lastPage"].get("page")
 
-    def get_all_vacancies_links(self):
+    def get_all_vacancies_links(self, only_one: bool = False) -> list:
         content = self.get_page_content(self.LINK)
         if not content:
             print(f"No content {self.LINK}")
@@ -53,6 +52,9 @@ class HeadHunterParser(BaseParser):
         )
         page_count = self.get_page_count(vacancies_dict["vacancySearchResult"])
         vacancies_list = []
+        if only_one:
+            vacancies_list.extend(self.get_vacancies_links(self.LINK))
+            return vacancies_list
         last_number = 0
         last_link = self.LINK
         for page_number in tqdm(range(page_count)):
@@ -109,7 +111,7 @@ class HeadHunterParser(BaseParser):
             return
         city = CityInputSchema(name=vacancy_data.get("area").get("name"))
         if not vacancy_data.get("company") or not vacancy_data.get("company").get(
-                "name"
+            "name"
         ):
             print(f"No company data found {link}")
         company = CompanyInputSchema(name=vacancy_data.get("company").get("name"))
@@ -128,13 +130,13 @@ class HeadHunterParser(BaseParser):
         salary_from = (
             salary_from * self.DOLLAR_TO_RUB
             if vacancy_data["compensation"]["currencyCode"] != self.RUR_CODE
-               and salary_from
+            and salary_from
             else salary_from
         )
         salary_to = (
             salary_to * self.DOLLAR_TO_RUB
             if vacancy_data["compensation"]["currencyCode"] != self.RUR_CODE
-               and salary_to
+            and salary_to
             else salary_to
         )
         analyzer = Analyzer(
@@ -147,11 +149,11 @@ class HeadHunterParser(BaseParser):
         speciality = analyzer.get_speciality()
         experience = analyzer.get_head_hunter_experience()
         if not all(
-                [
-                    language,
-                    speciality,
-                    experience,
-                ]
+            [
+                language,
+                speciality,
+                experience,
+            ]
         ):
             print(
                 f"No vacancy data found ({language}, {speciality}, {experience}) {link}"
@@ -174,20 +176,23 @@ class HeadHunterParser(BaseParser):
         )
         return vacancy_schema
 
-    async def get_vacancies(self):
-        links = self.get_all_vacancies_links()
+    async def get_vacancies(self, save: bool = True, only_one: bool = False):
+        links = self.get_all_vacancies_links(only_one=only_one)
+        vacancy_service = VacancyService(session=async_session_maker())
+        if only_one:
+            return self.get_vacancy_schema(links[0])
         for link in tqdm(links):
             await asyncio.sleep(self.get_sleep_time())
             vacancy_schema = self.get_vacancy_schema(link)
             if not vacancy_schema:
                 continue
-            async with get_async_session() as session:
-                try:
-                    vacancy_service = VacancyService(session=session)
-                    await vacancy_service.create(vacancy_schema)
-                except HTTPException as exc:
-                    print(exc)
-                    continue
+            if not save:
+                continue
+            try:
+                await vacancy_service.create(vacancy_schema)
+            except HTTPException as exc:
+                print(exc)
+                continue
 
 
 async def main():

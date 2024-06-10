@@ -1,22 +1,6 @@
-import asyncio
-import json
 import random
 
 import requests
-
-from bs4 import BeautifulSoup
-from tqdm import tqdm
-
-from core.database import get_async_session
-from utils.parser.analyzer import Analyzer
-from v1.vacancy.schema.schema import (
-    CityInputSchema,
-    CompanyInputSchema,
-    ToolInputSchema,
-    VacancyCreateSchema,
-    VacancyInputSchema,
-)
-from v1.vacancy.service.service import VacancyService
 
 
 class BaseParser:
