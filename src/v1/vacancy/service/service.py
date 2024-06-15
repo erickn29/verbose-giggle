@@ -134,11 +134,11 @@ class VacancyService(BaseService):
         self,
         order_by: list = None,
         pagination: dict = None,
+        filters: dict = None
     ) -> VacancyListOutputSchema:
-        # vacancies: list[Vacancy] = await self.repository.all()
         paginated = await paginate(
             paginate_dict=pagination,
-            filters={},
+            filters=filters,
             repository=self.repository,
         )
         vacancies: list[Vacancy] = paginated.get("result")

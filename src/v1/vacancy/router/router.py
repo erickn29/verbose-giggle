@@ -1,6 +1,8 @@
 from typing import Annotated
 from uuid import UUID
 
+from starlette.requests import Request
+
 from core.database import get_async_session
 from fastapi import APIRouter, Body, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,10 +20,19 @@ router = APIRouter()
 @router.get("/", response_model=VacancyListOutputSchema)
 async def vacancy_list(
     session: Annotated[AsyncSession, Depends(get_async_session)],
+    request: Request,
     page: int = 1,
 ):
     vacancy_service = VacancyService(session)
-    return await vacancy_service.all(pagination={"current_page": page, "limit": 20})
+    filters = {}
+    params = request.query_params.items()
+    for key, value in params:
+        if key != "page" and value is not None:
+            filters[key] = value
+    return await vacancy_service.all(
+        pagination={"current_page": page, "limit": 20},
+        filters=filters,
+    )
 
 
 @router.get("/{vacancy_id}/", response_model=VacancyOutputSchema)
