@@ -66,7 +66,12 @@ class SQLAlchemyRepository(BaseAsyncRepository):
             result = await self.session.execute(query)
             return result.scalars().all()
 
-    async def filter(self, filters: dict, order_by: list = None) -> Sequence[Base]:
+    async def filter(
+        self,
+        filters: dict,
+        order_by: list = None,
+        paginate: dict = None,
+    ) -> Sequence[Base]:
         """
         filters = {
             "price": {"gt": 100, "lt": 200},
@@ -100,6 +105,12 @@ class SQLAlchemyRepository(BaseAsyncRepository):
             else:
                 filter_list.append(getattr(self.model, key) == value)
             query = select(self.model).filter(and_(*filter_list)).order_by(*order_by)
+        if paginate:
+            limit = 5 if paginate.get("limit") <= 0 else paginate.get("limit")
+            page = (
+                1 if paginate.get("current_page") <= 0 else paginate.get("current_page")
+            )
+            query = query.limit(limit).offset((page - 1) * limit)
         result = await self.session.execute(query)
         return result.scalars().all()
 

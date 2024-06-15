@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import HTTPException
 from service.base import BaseService
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from utils.pagination import paginate, PaginationSchema
 from v1.vacancy.model.model import City, Company, Tool, Vacancy
 from v1.vacancy.repository.repository import (
     CityRepository,
@@ -128,15 +130,27 @@ class VacancyService(BaseService):
         vacancy.company_id = company_obj.id
         return vacancy
 
-    async def all(self, order_by: list = None) -> VacancyListOutputSchema:
-        vacancies: list[Vacancy] = await self.repository.all()
+    async def all(
+        self,
+        order_by: list = None,
+        pagination: dict = None,
+    ) -> VacancyListOutputSchema:
+        # vacancies: list[Vacancy] = await self.repository.all()
+        paginated = await paginate(
+            paginate_dict=pagination,
+            filters={},
+            repository=self.repository,
+        )
+        vacancies: list[Vacancy] = paginated.get("result")
+        pagination: PaginationSchema = paginated.get("pagination")
         vacancies_list: list[VacancyOutputSchema] = []
         for vacancy in vacancies:
             obj = VacancyOutputSchema.from_orm(vacancy)
+            obj.description = None
             if vacancy.tools:
                 obj.tool = [ToolOutputSchema.from_orm(o.tool) for o in vacancy.tools]
             vacancies_list.append(obj)
-        return VacancyListOutputSchema(vacancies=vacancies_list)
+        return VacancyListOutputSchema(vacancies=vacancies_list, pagination=pagination)
 
 
 class ToolService(BaseService):

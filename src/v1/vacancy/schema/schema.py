@@ -3,7 +3,9 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
-from v1.vacancy.model.model import Experience, Language, Speciality
+
+from utils.pagination import PaginationSchema
+from v1.vacancy.model.model import Experience, Language, Speciality, Company
 
 
 class ToolInputSchema(BaseModel):
@@ -29,7 +31,9 @@ class CityInputSchema(BaseModel):
 
 
 class CityOutputSchema(CityInputSchema):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
+    name: str
     created_at: datetime
     updated_at: datetime
 
@@ -41,7 +45,10 @@ class CompanyInputSchema(BaseModel):
 
 
 class CompanyOutputSchema(CompanyInputSchema):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
+    name: str
+    city: CityOutputSchema
     created_at: datetime
     updated_at: datetime
 
@@ -96,6 +103,12 @@ class VacancyOutputSchema(VacancyInputSchema):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    title: str
+    experience: str
+    salary_from: int | None = None
+    salary_to: int | None = None
+    description: str | None = None
+    company: CompanyOutputSchema
     created_at: datetime
     updated_at: datetime
     tool: list[ToolOutputSchema] | None = []
@@ -103,6 +116,7 @@ class VacancyOutputSchema(VacancyInputSchema):
 
 class VacancyListOutputSchema(BaseModel):
     vacancies: list[VacancyOutputSchema]
+    pagination: PaginationSchema
 
 
 class VacancyCreateSchema(BaseModel):

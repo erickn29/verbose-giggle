@@ -18,9 +18,10 @@ router = APIRouter()
 @router.get("/", response_model=VacancyListOutputSchema)
 async def vacancy_list(
     session: Annotated[AsyncSession, Depends(get_async_session)],
+    page: int = 1,
 ):
     vacancy_service = VacancyService(session)
-    return await vacancy_service.all()
+    return await vacancy_service.all(pagination={"current_page": page, "limit": 20})
 
 
 @router.get("/{vacancy_id}/", response_model=VacancyOutputSchema)
