@@ -2,10 +2,13 @@ from typing import Annotated
 from uuid import UUID
 
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from core.database import get_async_session
 from fastapi import APIRouter, Body, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from v1.vacancy.model.model import Language, Experience, Speciality
 from v1.vacancy.schema.schema import (
     VacancyCreateSchema,
     VacancyListOutputSchema,
@@ -27,11 +30,25 @@ async def vacancy_list(
     filters = {}
     params = request.query_params.items()
     for key, value in params:
-        if key != "page" and value is not None:
+        if key != "page" and value:
             filters[key] = value
     return await vacancy_service.all(
         pagination={"current_page": page, "limit": 20},
         filters=filters,
+    )
+
+
+@router.get("/selectors/")
+async def vacancy_language():
+    languages = [lang.value for lang in Language]
+    experiences = [exp.value for exp in Experience]
+    specialities = [spec.value for spec in Speciality]
+    return JSONResponse(
+        {
+            "languages": languages,
+            "experiences": experiences,
+            "specialities": specialities,
+        },
     )
 
 
