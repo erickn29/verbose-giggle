@@ -14,7 +14,7 @@ DEFAULT_HOSTS = [
 class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
-        env_file=f"{Path(__file__).resolve().parent.parent.parent}" f"/secret/.envfile"
+        env_file=f"{Path(__file__).resolve().parent.parent.parent}" f"/secret/.env"
     )
 
     # main

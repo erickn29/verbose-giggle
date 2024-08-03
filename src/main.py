@@ -14,6 +14,7 @@ app = FastAPI(
     debug=cfg.DEBUG,
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cfg.CORS_ALLOWED_HOSTS,

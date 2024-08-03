@@ -1,9 +1,15 @@
+from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
+from sqlalchemy.dialects import postgresql
+
 from core.database import Base
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint, DateTime, \
+    Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from v1.user.model.model import User
 
 
 class Language(Enum):
@@ -47,6 +53,11 @@ class Tool(Base):
         "VacancyTool",
         back_populates="tool",
     )
+    resumes: Mapped[list["ResumeTool"]] = relationship(
+        "ResumeTool",
+        back_populates="tool",
+        lazy="selectin",
+    )
 
 
 class City(Base):
@@ -77,6 +88,12 @@ class Company(Base):
         back_populates="company",
         lazy="selectin",
     )
+    employer = relationship(
+        "Employer",
+        back_populates="company",
+        lazy="joined",
+        uselist=False,
+    )
 
 
 class Vacancy(Base):
@@ -90,6 +107,7 @@ class Vacancy(Base):
     experience: Mapped[str] = mapped_column(String(32), nullable=False)
     salary_from: Mapped[int] = mapped_column(Integer, nullable=True)
     salary_to: Mapped[int] = mapped_column(Integer, nullable=True)
+    is_publish: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     company_id: Mapped[UUID] = mapped_column(
         ForeignKey("company.id", ondelete="CASCADE"),
         nullable=False,
@@ -121,4 +139,136 @@ class VacancyTool(Base):
     )
     tool: Mapped["Tool"] = relationship(
         "Tool", back_populates="vacancies", lazy="joined"
+    )
+
+
+class ResumeTool(Base):
+    __tablename__ = "resume_tool"
+
+    resume_id: Mapped[UUID] = mapped_column(
+        ForeignKey("resume.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    tool_id: Mapped[UUID] = mapped_column(
+        ForeignKey("tool.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    resume: Mapped["Resume"] = relationship(
+        "Resume", back_populates="tools", lazy="joined"
+    )
+    tool: Mapped["Tool"] = relationship(
+        "Tool", back_populates="resumes", lazy="joined"
+    )
+
+
+class Employer(Base):
+    __tablename__ = "employer"
+    __table_args__ = (
+        UniqueConstraint("company_id", "user_id", name="uq_company_user"),
+    )
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    company_id: Mapped[UUID] = mapped_column(
+        ForeignKey("company.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    user = relationship(
+        "User", back_populates="employer", uselist=False, lazy="joined"
+    )
+    company = relationship(
+        "Company", back_populates="employer", uselist=False, lazy="joined"
+    )
+
+
+class Employee(Base):
+    __tablename__ = "employee"
+
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    first_name: Mapped[str] = mapped_column(String(32), doc="Имя")
+    last_name: Mapped[str] = mapped_column(String(32), doc="Фамилия")
+    patronymic: Mapped[str] = mapped_column(String(32), default="", doc="Отчество")
+    dob: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now)
+    sex: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    user = relationship(
+        "User", back_populates="employee", uselist=False, lazy="joined"
+    )
+    resumes: Mapped[list["Resume"]] = relationship(
+        "Resume",
+        back_populates="employee",
+        ondelete="cascade",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class Resume(Base):
+    __tablename__ = "resume"
+
+    employee_id: Mapped[UUID] = mapped_column(
+        ForeignKey("employee.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=False,
+    )
+    position: Mapped[str] = mapped_column(Text, nullable=False)
+    speciality: Mapped[str] = mapped_column(
+        postgresql.ENUM(*[s.value for s in Speciality], name="speciality"),
+        nullable=False,
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    is_publish: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    tools: Mapped[list["ResumeTool"]] = relationship(
+        "ResumeTool",
+        back_populates="resume",
+        lazy="selectin",
+    )
+    job_places: Mapped[list["JobPlace"]] = relationship(
+        "JobPlace",
+        back_populates="resume",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    employee: Mapped[Employee] = relationship(
+        Employee, back_populates="resumes", uselist=False, lazy="joined"
+    )
+
+
+class JobPlace(Base):
+    __tablename__ = "job_place"
+
+    company: Mapped[str] = mapped_column(Text, nullable=False)
+    resume_id: Mapped[UUID] = mapped_column(
+        ForeignKey("resume.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    position: Mapped[str] = mapped_column(Text, nullable=False)
+    speciality: Mapped[str] = mapped_column(
+        postgresql.ENUM(*[s.value for s in Speciality], name="speciality"),
+        nullable=False,
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    start_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now,
+        nullable=False,
+    )
+    end_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now,
+        nullable=True,
+    )
+
+    resume: Mapped["Resume"] = relationship(
+        "Resume", back_populates="job_places", lazy="joined"
     )
