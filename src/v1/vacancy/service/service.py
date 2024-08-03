@@ -57,7 +57,6 @@ class VacancyService(BaseService):
         vacancy_obj: Vacancy = await self.repository.get_or_create(vacancy_schema)
 
         if tool:
-            # TODO bulk create
             vacancy_tool_service = VacancyToolService(session=self.session)
             tool_obj_list: list[Tool] = [
                 await tool_service.get_or_create(t) for t in tool

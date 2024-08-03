@@ -113,7 +113,7 @@ class Vacancy(Base):
         nullable=False,
     )
     company: Mapped["Company"] = relationship(
-        "Company", back_populates="vacancies", lazy="joined"
+        "Company", back_populates="vacancies", lazy="selectin"
     )
     tools: Mapped[list["VacancyTool"]] = relationship(
         "VacancyTool",
@@ -204,7 +204,6 @@ class Employee(Base):
     resumes: Mapped[list["Resume"]] = relationship(
         "Resume",
         back_populates="employee",
-        ondelete="cascade",
         lazy="selectin",
         cascade="all, delete-orphan",
         passive_deletes=True,

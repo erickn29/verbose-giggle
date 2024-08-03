@@ -97,6 +97,7 @@ class VacancyFactory(BaseFactory):
     experience = Experience.one_to_three.value
     salary_from = random.randint(50000, 100000)
     salary_to = random.randint(101000, 200000)
+    is_publish = True
     company_id = None
 
 

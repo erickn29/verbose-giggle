@@ -94,6 +94,7 @@ class VacancyInputSchema(BaseModel):
     language: LanguageLiteral
     speciality: SpecialityLiteral
     experience: ExperienceLiteral
+    is_publish: bool = True
     salary_from: int | None = None
     salary_to: int | None = None
     company_id: UUID | None = None
@@ -108,6 +109,7 @@ class VacancyOutputSchema(VacancyInputSchema):
     salary_from: int | None = None
     salary_to: int | None = None
     description: str | None = None
+    is_publish: bool
     company: CompanyOutputSchema
     created_at: datetime
     updated_at: datetime
