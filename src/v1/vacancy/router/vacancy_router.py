@@ -1,14 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-
 from core.database import get_async_session
 from fastapi import APIRouter, Body, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from v1.vacancy.model.model import Language, Experience, Speciality
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from v1.vacancy.model.model import Experience, Language, Speciality
 from v1.vacancy.schema.schema import (
     VacancyCreateSchema,
     VacancyListOutputSchema,
@@ -39,7 +37,7 @@ async def vacancy_list(
 
 
 @router.get("/selectors/")
-async def vacancy_language():
+async def vacancy_selectors():
     languages = [lang.value for lang in Language]
     experiences = [exp.value for exp in Experience]
     specialities = [spec.value for spec in Speciality]

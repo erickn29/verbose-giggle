@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from core.config import cfg
 from service.base import BaseService
 from sqlalchemy.ext.asyncio import AsyncSession
 from v1.user.repository.repository import UserRepository
@@ -9,6 +10,9 @@ from v1.user.schema.schema import (
     UserOutputSchema,
     UserUpdateSchema,
 )
+
+
+PWD_CONTEXT = cfg.PWD_CONTEXT
 
 
 class UserService(BaseService):
@@ -55,3 +59,13 @@ class UserService(BaseService):
 
     async def filter(self, filters: dict, order_by: list = None):
         return await self.repository.filter(filters, order_by)
+
+    @staticmethod
+    def verify_password(plain_password, hashed_password) -> bool:
+        """Сравнивает пароль в БД и из формы, True если соль и пароль верные"""
+        return PWD_CONTEXT.verify(cfg.SECRET_KEY + plain_password, hashed_password)
+
+    @staticmethod
+    def get_password_hash(password) -> str:
+        """Хэширует пароль пользователя, нужно для регистрации или смены пароля"""
+        return PWD_CONTEXT.hash(cfg.SECRET_KEY + password)

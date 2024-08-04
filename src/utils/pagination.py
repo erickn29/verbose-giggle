@@ -1,10 +1,7 @@
 from math import ceil
-from typing import Any
 
 from pydantic import BaseModel
-
 from repository.base import BaseAsyncRepository
-from v1.vacancy.repository.repository import VacancyRepository
 
 
 class PaginationSchema(BaseModel):

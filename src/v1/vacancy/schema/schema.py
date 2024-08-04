@@ -3,9 +3,8 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
-
 from utils.pagination import PaginationSchema
-from v1.vacancy.model.model import Experience, Language, Speciality, Company
+from v1.vacancy.model.model import Experience, Language, Speciality
 
 
 class ToolInputSchema(BaseModel):

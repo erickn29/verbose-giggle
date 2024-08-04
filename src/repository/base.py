@@ -32,9 +32,6 @@ class BaseAsyncRepository(ABC):
 
     @abstractmethod
     async def filter(
-        self,
-        filters: dict = None,
-        order_by: list = None,
-        paginate: dict = None
+        self, filters: dict = None, order_by: list = None, paginate: dict = None
     ):
         raise NotImplementedError

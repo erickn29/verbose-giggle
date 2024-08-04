@@ -3,12 +3,16 @@ from uuid import UUID
 from fastapi import HTTPException
 from service.base import BaseService
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from utils.pagination import paginate, PaginationSchema
+from utils.pagination import PaginationSchema, paginate
 from v1.vacancy.model.model import City, Company, Tool, Vacancy
 from v1.vacancy.repository.repository import (
     CityRepository,
     CompanyRepository,
+    EmployeeRepository,
+    EmployerRepository,
+    JobPlaceRepository,
+    ResumeRepository,
+    ResumeToolRepository,
     ToolRepository,
     VacancyRepository,
     VacancyToolRepository,
@@ -130,10 +134,7 @@ class VacancyService(BaseService):
         return vacancy
 
     async def all(
-        self,
-        order_by: list = None,
-        pagination: dict = None,
-        filters: dict = None
+        self, order_by: list = None, pagination: dict = None, filters: dict = None
     ) -> VacancyListOutputSchema:
         paginated = await paginate(
             paginate_dict=pagination,
@@ -173,3 +174,28 @@ class VacancyToolService(BaseService):
 
     async def delete_vacancy_tools(self, vacancy_id: UUID):
         await self.repository.delete_vacancy_tools(vacancy_id)
+
+
+class EmployerService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=EmployerRepository)
+
+
+class EmployeeService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=EmployeeRepository)
+
+
+class ResumeService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=ResumeRepository)
+
+
+class JobPlaceService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=JobPlaceRepository)
+
+
+class ResumeToolService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=ResumeToolRepository)

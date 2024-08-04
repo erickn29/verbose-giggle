@@ -1,8 +1,5 @@
-from datetime import datetime
-from uuid import UUID
-
 from core.database import Base
-from sqlalchemy import String, DateTime, Boolean, ForeignKey
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -22,7 +19,7 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="joined"
+        lazy="joined",
     )
     employer = relationship(
         "Employer",
@@ -30,5 +27,5 @@ class User(Base):
         uselist=False,
         cascade="all, delete-orphan",
         passive_deletes=True,
-        lazy="joined"
+        lazy="joined",
     )

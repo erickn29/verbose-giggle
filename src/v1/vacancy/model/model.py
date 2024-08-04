@@ -2,14 +2,18 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
-from sqlalchemy.dialects import postgresql
-
 from core.database import Base
-from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint, DateTime, \
-    Boolean
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from v1.user.model.model import User
 
 
 class Language(Enum):
@@ -156,9 +160,7 @@ class ResumeTool(Base):
     resume: Mapped["Resume"] = relationship(
         "Resume", back_populates="tools", lazy="joined"
     )
-    tool: Mapped["Tool"] = relationship(
-        "Tool", back_populates="resumes", lazy="joined"
-    )
+    tool: Mapped["Tool"] = relationship("Tool", back_populates="resumes", lazy="joined")
 
 
 class Employer(Base):
@@ -176,9 +178,7 @@ class Employer(Base):
         nullable=False,
     )
 
-    user = relationship(
-        "User", back_populates="employer", uselist=False, lazy="joined"
-    )
+    user = relationship("User", back_populates="employer", uselist=False, lazy="joined")
     company = relationship(
         "Company", back_populates="employer", uselist=False, lazy="joined"
     )
@@ -198,9 +198,7 @@ class Employee(Base):
     dob: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now)
     sex: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    user = relationship(
-        "User", back_populates="employee", uselist=False, lazy="joined"
-    )
+    user = relationship("User", back_populates="employee", uselist=False, lazy="joined")
     resumes: Mapped[list["Resume"]] = relationship(
         "Resume",
         back_populates="employee",
