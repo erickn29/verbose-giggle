@@ -1,9 +1,11 @@
 from typing import Annotated
 
 from core.database import get_async_session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+
+from v1.vacancy.schema.schema import ResumeCreateSchema, ResumeOutputSchema
 from v1.vacancy.service.service import ResumeService
 
 
@@ -28,10 +30,10 @@ async def resume_list(
     )
 
 
-# @router.post("/", response_model=ResumeOutputSchema, status_code=201)
-# async def create_resume(
-#     session: Annotated[AsyncSession, Depends(get_async_session)],
-#     data: Annotated[ResumeCreateSchema, Body(...)],
-# ):
-#     resume_service = ResumeService(session)
-#     return await resume_service.create(data)
+@router.post("/", response_model=ResumeOutputSchema, status_code=201)
+async def create_resume(
+    session: Annotated[AsyncSession, Depends(get_async_session)],
+    data: Annotated[ResumeCreateSchema, Body(...)],
+):
+    resume_service = ResumeService(session)
+    return await resume_service.create(data)

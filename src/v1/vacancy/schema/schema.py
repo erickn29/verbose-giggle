@@ -125,3 +125,62 @@ class VacancyCreateSchema(BaseModel):
     company: CompanyInputSchema
     vacancy: VacancyInputSchema
     tool: list[ToolInputSchema] | None = []
+
+
+class EmployeeInputSchema(BaseModel):
+    first_name: str
+    last_name: str
+    patronymic: str = ""
+    dob: datetime
+    sex: bool
+
+
+class ResumeToolSchema(BaseModel):
+    resume_id: UUID
+    tool_id: UUID
+
+
+class ResumeInputSchema(BaseModel):
+    position: str
+    speciality: SpecialityLiteral
+    description: str | None = None
+    is_publish: bool = True
+
+
+class JobPlaceInputSchema(BaseModel):
+    company: str
+    position: str
+    speciality: str
+    description: str | None = None
+    start_date: datetime
+    end_date: datetime | None = None
+
+
+class JobPlaceOutputSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    company: str
+    position: str
+    speciality: str
+    description: str = ""
+    start_date: datetime
+    end_date: datetime | None = None
+
+
+class ResumeCreateSchema(BaseModel):
+    resume: ResumeInputSchema
+    job_place: list[JobPlaceInputSchema]
+    tool: list[ToolInputSchema]
+
+
+class ResumeOutputSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    position: str
+    speciality: str
+    description: str
+    is_publish: bool
+    job_place: list[JobPlaceOutputSchema] = []
+    tool: list[ToolOutputSchema] = []
