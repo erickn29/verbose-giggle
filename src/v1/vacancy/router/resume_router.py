@@ -4,14 +4,15 @@ from core.database import get_async_session
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-from v1.vacancy.schema.schema import ResumeCreateSchema, ResumeOutputSchema
+from v1.vacancy.schema.schema import ResumeCreateSchema, ResumeOutputSchema, \
+    ResumeListOutputSchema
 from v1.vacancy.service.service import ResumeService
 
 
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", response_model=ResumeListOutputSchema, status_code=200)
 async def resume_list(
     session: Annotated[AsyncSession, Depends(get_async_session)],
     request: Request,

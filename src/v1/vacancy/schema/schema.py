@@ -184,3 +184,7 @@ class ResumeOutputSchema(BaseModel):
     is_publish: bool
     job_place: list[JobPlaceOutputSchema] = []
     tool: list[ToolOutputSchema] = []
+
+
+class ResumeListOutputSchema(BaseModel):
+    resumes: list[ResumeOutputSchema]
