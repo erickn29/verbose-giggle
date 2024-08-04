@@ -3,7 +3,7 @@ from datetime import datetime
 import factory
 
 from utils.factory.base import BaseFactory
-from v1.vacancy.model.model import Employer, Employee, Resume, JobPlace
+from v1.vacancy.model.model import Employee, Employer, JobPlace, Resume
 
 
 class EmployerFactory(BaseFactory):
@@ -29,10 +29,10 @@ class EmployeeFactory(BaseFactory):
         sqlalchemy_session_persistence = "commit"
 
     user_id: str = None
-    first_name: str = factory.Faker('first_name')
-    last_name: str = factory.Faker('last_name')
-    patronymic: str = factory.Faker('patronymic')
-    dob: datetime = factory.Faker('date_of_birth')
+    first_name: str = factory.Faker("first_name")
+    last_name: str = factory.Faker("last_name")
+    patronymic: str = factory.Faker("patronymic")
+    dob: datetime = factory.Faker("date_of_birth")
     sex: bool = True
 
 
@@ -46,9 +46,9 @@ class ResumeFactory(BaseFactory):
         sqlalchemy_session_persistence = "commit"
 
     employee_id: str = None
-    position: str = factory.Faker('word')
+    position: str = factory.Faker("word")
     speciality: str = "разработка"
-    description: str = factory.Faker('word')
+    description: str = factory.Faker("word")
     is_publish: bool = True
 
 
@@ -61,9 +61,9 @@ class JobPlaceFactory(BaseFactory):
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "commit"
 
-    company: str = factory.Faker('company')
+    company: str = factory.Faker("company")
     resume_id: str = None
-    position: str = factory.Faker('word')
+    position: str = factory.Faker("word")
     speciality: str = "разработка"
-    description: str = factory.Faker('word')
+    description: str = factory.Faker("word")
     end_date = None

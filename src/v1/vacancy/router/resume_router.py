@@ -1,10 +1,9 @@
 from typing import Annotated
 
 from core.database import get_async_session
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-
 from v1.vacancy.schema.schema import ResumeCreateSchema, ResumeOutputSchema
 from v1.vacancy.service.service import ResumeService
 
