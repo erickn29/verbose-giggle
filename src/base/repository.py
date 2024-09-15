@@ -1,4 +1,3 @@
-# from core.database import async_session_maker
 from collections.abc import Sequence
 from typing import Any
 
@@ -10,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class SQLAlchemyRepository:
+class BaseRepository:
     model = None
 
     def __init__(self, session: AsyncSession, model) -> None:
@@ -52,9 +51,9 @@ class SQLAlchemyRepository:
 
     async def fetch(
         self,
-        filters: dict = None,
-        order_by: list = None,
-        paginate: dict = None,
+        filters: dict | None = None,
+        order_by: list | None = None,
+        paginate: dict | None = None,
     ) -> Sequence[Row[Any] | RowMapping | Any]:
         """
         filters = {

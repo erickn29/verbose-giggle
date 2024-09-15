@@ -207,7 +207,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-project_secrets/.envfile
+secrets/.envfile
 
 # Spyder project settings
 .spyderproject

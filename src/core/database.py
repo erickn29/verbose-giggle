@@ -1,51 +1,50 @@
-import uuid
-
 from collections.abc import AsyncGenerator
-from datetime import datetime
-from typing import Annotated
 
-from core.config import cfg
-from sqlalchemy import UUID, func
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from core.settings import settings
 
-
-DATABASE_URL = cfg.get_db_url(is_async=True)
-
-
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 
-# @asynccontextmanager
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
+class DatabaseHelper:
+    def __init__(
+        self,
+        url: str,
+        echo: bool = False,
+        echo_pool: bool = False,
+        pool_size: int = 30,
+        max_overflow: int = 10,
+    ) -> None:
+        self.engine: AsyncEngine = create_async_engine(
+            url=url,
+            echo=echo,
+            echo_pool=echo_pool,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
+        )
+        self.session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
+            bind=self.engine,
+            autoflush=False,
+            autocommit=False,
+            expire_on_commit=False,
+        )
+
+    async def dispose(self) -> None:
+        await self.engine.dispose()
+
+    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
+        async with self.session_factory() as session:
+            yield session
 
 
-uuid_pk = Annotated[
-    uuid.UUID,
-    mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True
-    ),
-]
-
-created_at = Annotated[
-    datetime,
-    mapped_column(server_default=func.now(), doc="Дата создания"),
-]
-
-updated_at = Annotated[
-    datetime,
-    mapped_column(
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        doc="Дата изменения",
-    ),
-]
-
-
-class Base(DeclarativeBase):
-    id: Mapped[uuid_pk]
-    created_at: Mapped[created_at]
-    updated_at: Mapped[updated_at]
+db_conn = DatabaseHelper(
+    url=settings.db.url,
+    echo=settings.db.echo,
+    echo_pool=settings.db.echo_pool,
+    pool_size=settings.db.pool_size,
+    max_overflow=settings.db.max_overflow,
+)

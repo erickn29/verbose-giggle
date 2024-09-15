@@ -1,28 +1,40 @@
-from core.config import cfg
+from apps.router import router as routers
+from core.settings import settings
+
+import uvicorn
+
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from v1.router import v1_routers
 
 
 app = FastAPI(
     title="Python Russia",
     version="0.0.1",
     default_response_class=ORJSONResponse,
-    docs_url="/swagger/" if cfg.DEBUG else None,
-    redoc_url="/redoc/" if cfg.DEBUG else None,
-    debug=cfg.DEBUG,
+    docs_url="/swagger/" if settings.app.DEBUG else None,
+    redoc_url="/redoc/" if settings.app.DEBUG else None,
+    debug=settings.app.DEBUG,
 )
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cfg.CORS_ALLOWED_HOSTS,
-    allow_credentials=cfg.CORS_ALLOWED_CREDENTIALS,
-    # allow_origin_regex=cfg.CORS_ALLOWED_HOSTS_REGEX,
-    allow_methods=cfg.CORS_ALLOWED_METHODS,
-    allow_headers=cfg.CORS_ALLOWED_HEADERS,
+    allow_origins=settings.cors.ALLOWED_HOSTS,
+    allow_credentials=settings.cors.ALLOWED_CREDENTIALS,
+    # allow_origin_regex=settings.CORS_ALLOWED_HOSTS_REGEX,
+    allow_methods=settings.cors.ALLOWED_METHODS,
+    allow_headers=settings.cors.ALLOWED_HEADERS,
 )
 
 
-app.include_router(v1_routers)
+app.include_router(routers)
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host=settings.app.HOST,
+        port=settings.app.PORT,
+        reload=True,
+    )

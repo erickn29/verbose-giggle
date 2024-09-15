@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from core.database import Base
+from base.model import Base
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

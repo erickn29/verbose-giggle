@@ -1,12 +1,13 @@
 from uuid import UUID
 
+from base.repository import BaseRepository
+
 from pydantic import BaseModel
-from repository.base import BaseAsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class BaseService:
-    def __init__(self, session: AsyncSession, repository: BaseAsyncRepository):
+    def __init__(self, session: AsyncSession, repository: BaseRepository):
         self.session = session
         self.repository = repository(session=session)
 
@@ -25,7 +26,7 @@ class BaseService:
     async def get_all(self, order_by: list = None):
         return await self.repository.all(order_by)
 
-    async def fetch(self, filters: dict, order_by: list = None):
+    async def filter(self, filters: dict, order_by: list = None):
         return await self.repository.filter(filters, order_by)
 
     async def get_or_create(self, obj: BaseModel):
