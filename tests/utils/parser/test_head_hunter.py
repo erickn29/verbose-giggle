@@ -1,5 +1,5 @@
-from utils.parser.head_hunter import HeadHunterParser
-from v1.vacancy.schema.schema import VacancyCreateSchema
+from src.apps.v1.vacancy.schema import VacancyCreateSchema
+from src.apps.v1.vacancy.utils.parser.head_hunter import HeadHunterParser
 
 
 async def test_head_hunter():

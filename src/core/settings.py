@@ -1,4 +1,5 @@
 from pathlib import Path
+from tkinter import N
 
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -59,11 +60,11 @@ class DatabaseConfig(BaseModel):
         "pk": "pk_%(table_name)s",
     }
 
-    @property
-    def url(self) -> str:
+    def url(self, db_name: str | None = None) -> str:
+        db_name = db_name or self.name
         return (
             "postgresql+asyncpg://"
-            f"{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
+            f"{self.user}:{self.password}@{self.host}:{self.port}/{db_name}"
         )
 
 
