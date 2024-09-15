@@ -1,9 +1,9 @@
 from datetime import datetime
 
-import factory
+from src.apps.v1.vacancy.model import Employee, Employer, JobPlace, Resume
+from tests.factory.base import BaseFactory
 
-from utils.factory.base import BaseFactory
-from v1.vacancy.model.model import Employee, Employer, JobPlace, Resume
+import factory
 
 
 class EmployerFactory(BaseFactory):

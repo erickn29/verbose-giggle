@@ -3,7 +3,6 @@ from enum import Enum
 from uuid import UUID
 
 from base.model import Base
-
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -57,6 +56,7 @@ class Tool(Base):
     vacancies: Mapped[list["VacancyTool"]] = relationship(
         "VacancyTool",
         back_populates="tool",
+        lazy="selectin",
     )
     resumes: Mapped[list["ResumeTool"]] = relationship(
         "ResumeTool",
@@ -103,7 +103,7 @@ class Company(Base):
 
 class Vacancy(Base):
     __tablename__ = "vacancy"
-    __table_args__ = (UniqueConstraint("company_id", "title", name="uq_company_title"),)
+    __table_args__ = (UniqueConstraint("company_id", "title", name="uq_company_title"), {'extend_existing': True})
 
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
@@ -168,6 +168,7 @@ class Employer(Base):
     __tablename__ = "employer"
     __table_args__ = (
         UniqueConstraint("company_id", "user_id", name="uq_company_user"),
+        {'extend_existing': True}
     )
 
     user_id: Mapped[UUID] = mapped_column(
@@ -238,7 +239,7 @@ class Resume(Base):
         passive_deletes=True,
     )
     employee: Mapped[Employee] = relationship(
-        Employee, back_populates="resumes", uselist=False, lazy="joined"
+        "Employee", back_populates="resumes", uselist=False, lazy="joined"
     )
 
 

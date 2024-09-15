@@ -1,5 +1,4 @@
 from pathlib import Path
-from tkinter import N
 
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -104,7 +103,7 @@ class CorsConfig(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=f"{Path(__file__).resolve().parent.parent.parent}/secrets/.envfile",
+        env_file=f"{Path(__file__).resolve().parent.parent.parent}/secret/.envfile",
         case_sensitive=False,
         env_nested_delimiter="__",
         arbitrary_types_allowed=True,

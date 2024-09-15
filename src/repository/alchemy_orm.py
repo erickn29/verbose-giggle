@@ -123,3 +123,10 @@ class SQLAlchemyRepository:
         result = await self.session.execute(query)
         obj = result.scalars().first()
         return obj is not None
+    
+    async def get_or_create(self, obj: BaseModel):
+        obj_in_db = await self.fetch(obj.model_dump())
+        if obj_in_db:
+            return obj_in_db[0]
+        result = await self.create(obj)
+        return result

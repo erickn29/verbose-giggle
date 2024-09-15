@@ -1,9 +1,6 @@
 import random
 
-import factory
-
-from utils.factory.base import BaseFactory
-from v1.vacancy.model.model import (
+from src.apps.v1.vacancy.model import (
     City,
     Company,
     Experience,
@@ -13,6 +10,9 @@ from v1.vacancy.model.model import (
     Vacancy,
     VacancyTool,
 )
+from tests.factory.base import BaseFactory
+
+import factory
 
 
 class ToolFactory(BaseFactory):

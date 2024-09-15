@@ -1,7 +1,7 @@
 import pytest
 
 from fastapi import HTTPException
-from v1.vacancy.service.service import VacancyService
+from src.apps.v1.vacancy.service import VacancyService
 
 
 class TestOutput:

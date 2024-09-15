@@ -1,21 +1,20 @@
 import asyncio
 import json
 
-from core.database import async_session_maker
-from utils.parser.analyzer import Analyzer
-from utils.parser.base import BaseParser
-from v1.vacancy.schema.schema import (
+from apps.v1.vacancy.schema import (
     CityInputSchema,
     CompanyInputSchema,
     ToolInputSchema,
     VacancyCreateSchema,
     VacancyInputSchema,
 )
-from v1.vacancy.service.service import VacancyService
-
+from apps.v1.vacancy.service import VacancyService
 from bs4 import BeautifulSoup
+from core.database import db_conn
 from fastapi import HTTPException
 from tqdm import tqdm
+from utils.parser.analyzer import Analyzer
+from utils.parser.base import BaseParser
 
 
 class HeadHunterParser(BaseParser):
@@ -179,7 +178,7 @@ class HeadHunterParser(BaseParser):
 
     async def get_vacancies(self, save: bool = True, only_one: bool = False):
         links = self.get_all_vacancies_links(only_one=only_one)
-        vacancy_service = VacancyService(session=async_session_maker())
+        vacancy_service = VacancyService(session=db_conn.get_session())
         if only_one:
             return self.get_vacancy_schema(links[0])
         for link in tqdm(links):

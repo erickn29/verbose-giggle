@@ -1,12 +1,12 @@
-import pytest
-
-from utils.factory.vacancy import (
+from tests.factory.vacancy import (
     CityFactory,
     CompanyFactory,
     ToolFactory,
     VacancyFactory,
     VacancyToolFactory,
 )
+
+import pytest
 
 
 @pytest.fixture(scope="session")

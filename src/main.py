@@ -1,17 +1,16 @@
-from apps.router import router as routers
-from core.settings import settings
-
 import uvicorn
 
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
+from apps.router import router as routers
+from core.exceptions import BaseHTTPException
+from core.settings import settings
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 
 app = FastAPI(
     title="Python Russia",
     version="0.0.1",
-    default_response_class=ORJSONResponse,
     docs_url="/swagger/" if settings.app.DEBUG else None,
     redoc_url="/redoc/" if settings.app.DEBUG else None,
     debug=settings.app.DEBUG,
@@ -29,6 +28,17 @@ app.add_middleware(
 
 
 app.include_router(routers)
+
+
+@app.exception_handler(BaseHTTPException)
+async def http_exception_handler(
+    request: Request,
+    exc: BaseHTTPException,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=exc.get_response(),
+    )
 
 
 if __name__ == "__main__":

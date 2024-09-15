@@ -12,7 +12,6 @@ from apps.v1.vacancy.schema import (
 )
 from apps.v1.vacancy.service import ResumeService, VacancyService
 from core.database import db_conn
-
 from fastapi import APIRouter, Body, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request

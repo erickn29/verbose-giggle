@@ -20,11 +20,10 @@ from apps.v1.vacancy.schema import (
     VacancyOutputSchema,
     VacancyToolSchema,
 )
-from service.base import BaseService
-from utils.pagination import PaginationSchema, paginate
-
 from fastapi import HTTPException
+from service.base import BaseService
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.pagination import PaginationSchema, paginate
 
 
 class VacancyService(BaseService):

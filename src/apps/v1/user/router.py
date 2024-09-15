@@ -16,7 +16,6 @@ from apps.v1.user.service import UserService
 from core.database import db_conn
 from core.exceptions import exception
 from core.settings import settings
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
