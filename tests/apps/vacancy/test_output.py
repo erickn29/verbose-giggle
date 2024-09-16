@@ -10,10 +10,14 @@ class TestOutput:
         response = await client.get("/api/v1/job/vacancy/")
         assert isinstance(response.json()["vacancies"], list)
         assert len(response.json()["vacancies"]) > 0
-        assert response.json()["vacancies"][0]["id"] == str(vacancy_output["vacancy"].id)
+        assert response.json()["vacancies"][0]["id"] == str(
+            vacancy_output["vacancy"].id
+        )
 
     async def test_vacancy_detail(self, client, vacancy_output):
-        response = await client.get(f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/")
+        response = await client.get(
+            f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/"
+        )
         assert response.json()["id"] == str(vacancy_output["vacancy"].id)
         assert response.json()["title"] == vacancy_output["vacancy"].title
 
@@ -70,7 +74,9 @@ class TestOutput:
             },
             "tool": [{"name": "zxcvb"}],
         }
-        response = await client.put(f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/", json=data)
+        response = await client.put(
+            f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/", json=data
+        )
         async with session:
             vacancy_service = VacancyService(session)
             vacancy = await vacancy_service.get_schema(vacancy_output["vacancy"].id)
@@ -102,7 +108,9 @@ class TestOutput:
             },
             "tool": [{"name": "zxcvb"}, {"name": "asdfg"}],
         }
-        await client.put(f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/", json=data)
+        await client.put(
+            f"/api/v1/job/vacancy/{str(vacancy_output["vacancy"].id)}/", json=data
+        )
         async with session:
             vacancy_service = VacancyService(session)
             vacancy = await vacancy_service.get_schema(vacancy_output["vacancy"].id)
@@ -114,7 +122,9 @@ class TestOutput:
         }
 
     async def test_delete_vacancy(self, client, vacancy_output, session):
-        await client.delete(f"/api/v1/job/vacancy/{str(vacancy_output["vacancy_del"].id)}/")
+        await client.delete(
+            f"/api/v1/job/vacancy/{str(vacancy_output["vacancy_del"].id)}/"
+        )
         async with session:
             vacancy_service = VacancyService(session)
             with pytest.raises(HTTPException):

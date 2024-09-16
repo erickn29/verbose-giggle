@@ -7,7 +7,9 @@ class TestStatus:
         assert response.status_code == 200
 
     async def test_vacancy_200(self, client, vacancy_status):
-        response = await client.get(f"/api/v1/job/vacancy/{str(vacancy_status["vacancy"].id)}/")
+        response = await client.get(
+            f"/api/v1/job/vacancy/{str(vacancy_status["vacancy"].id)}/"
+        )
         assert response.status_code == 200
 
     async def test_vacancy_detail_404(self, client):
@@ -133,7 +135,9 @@ class TestStatus:
         assert response.status_code == 404
 
     async def test_delete_204(self, client, vacancy_status):
-        response = await client.delete(f"/api/v1/job/vacancy/{str(vacancy_status["vacancy_del"].id)}/")
+        response = await client.delete(
+            f"/api/v1/job/vacancy/{str(vacancy_status["vacancy_del"].id)}/"
+        )
         assert response.status_code == 204
 
     async def test_delete_404(self, client, vacancy_status):

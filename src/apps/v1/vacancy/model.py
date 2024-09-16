@@ -103,7 +103,7 @@ class Company(Base):
 
 class Vacancy(Base):
     __tablename__ = "vacancy"
-    __table_args__ = (UniqueConstraint("company_id", "title", name="uq_company_title"), )
+    __table_args__ = (UniqueConstraint("company_id", "title", name="uq_company_title"),)
 
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
@@ -168,7 +168,6 @@ class Employer(Base):
     __tablename__ = "employer"
     __table_args__ = (
         UniqueConstraint("company_id", "user_id", name="uq_company_user"),
-        
     )
 
     user_id: Mapped[UUID] = mapped_column(

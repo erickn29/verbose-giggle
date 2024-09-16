@@ -17,11 +17,10 @@ from apps.v1.user.service import UserService
 from core.database import db_conn
 from core.exceptions import exception
 from core.settings import settings
-from utils.mail import Mail
-
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm as OAuthForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.mail import Mail
 
 
 router = APIRouter()

@@ -8,10 +8,9 @@ from apps.v1.auth.schema import PasswordRecoveryEmail, RecoveryTokenInputSchema
 from apps.v1.user.model import User
 from core.exceptions import exception
 from core.settings import settings
-from utils.mail import Mail
-
 from pydantic import UUID4, BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils.mail import Mail
 
 
 class RecoveryTokenUpdate(BaseModel):

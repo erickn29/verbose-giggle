@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from base.repository import BaseRepository
-
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 

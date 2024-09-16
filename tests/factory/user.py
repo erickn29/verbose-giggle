@@ -1,8 +1,8 @@
 import factory
 
-from utils.factory.base import BaseFactory
 from apps.v1.user.model import User
 from apps.v1.user.service import UserService
+from utils.factory.base import BaseFactory
 
 
 class UserFactory(BaseFactory):

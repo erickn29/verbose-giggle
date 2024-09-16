@@ -4,17 +4,15 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from uuid import uuid4
 
-from base.model import Base
-from core.database import db_conn
-from core.settings import settings
-from main import app
-
 # from src.tests.factory.factory import UserFactory
 import pytest
 import pytest_asyncio
 
-from factory.alchemy import SQLAlchemyModelFactory
+from base.model import Base
+from core.database import db_conn
+from core.settings import settings
 from httpx import AsyncClient
+from main import app
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool

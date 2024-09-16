@@ -10,7 +10,6 @@ from apps.v1.user.schema import (
 )
 from base.service import BaseService
 from core.settings import settings
-
 from pydantic import UUID4
 from sqlalchemy import Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession

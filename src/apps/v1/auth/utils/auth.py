@@ -2,14 +2,13 @@
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import jwt
+
 from apps.v1.user.model import User
 from apps.v1.user.service import UserService
 from core.database import db_conn
 from core.exceptions import exception
 from core.settings import settings
-
-import jwt
-
 from fastapi import Depends
 from jwt import DecodeError, ExpiredSignatureError
 from pydantic import BaseModel

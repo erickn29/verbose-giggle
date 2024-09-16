@@ -1,7 +1,10 @@
 import asyncio
 import json
 
+from bs4 import BeautifulSoup
 from core.database import async_session_maker
+from fastapi import HTTPException
+from tqdm import tqdm
 from utils.parser.analyzer import Analyzer
 from utils.parser.base import BaseParser
 from v1.vacancy.schema.schema import (
@@ -12,10 +15,6 @@ from v1.vacancy.schema.schema import (
     VacancyInputSchema,
 )
 from v1.vacancy.service.service import VacancyService
-
-from bs4 import BeautifulSoup
-from fastapi import HTTPException
-from tqdm import tqdm
 
 
 class HeadHunterParser(BaseParser):

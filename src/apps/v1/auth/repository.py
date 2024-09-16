@@ -3,7 +3,6 @@ from typing import Annotated
 from apps.v1.auth.model import RecoveryToken
 from base.repository import BaseRepository
 from core.database import db_conn
-
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 

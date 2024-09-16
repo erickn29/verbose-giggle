@@ -2,7 +2,6 @@ from collections.abc import Sequence
 from typing import Any
 
 from core.exceptions import exception
-
 from pydantic import UUID4, BaseModel
 from sqlalchemy import Row, RowMapping, and_, insert, select
 from sqlalchemy.exc import IntegrityError
