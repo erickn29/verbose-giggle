@@ -100,12 +100,14 @@ class VacancyInputSchema(BaseModel):
     company_id: UUID | None = None
 
 
-class VacancyOutputSchema(VacancyInputSchema):
+class VacancyOutputSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     title: str
     experience: str
+    language: str
+    speciality: str
     salary_from: int | None = None
     salary_to: int | None = None
     description: str | None = None

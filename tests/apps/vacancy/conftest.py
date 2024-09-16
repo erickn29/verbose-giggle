@@ -20,8 +20,9 @@ async def vacancy_status(session):
     city = await CityFactory()
     company = await CompanyFactory(city_id=city.id)
     vacancy = await VacancyFactory(company_id=company.id)
+    vacancy_del = await VacancyFactory(company_id=company.id)
 
-    return vacancy
+    return {"vacancy": vacancy, "vacancy_del": vacancy_del}
 
 
 @pytest.fixture(scope="session")
@@ -35,5 +36,6 @@ async def vacancy_output(session):
     city = await CityFactory()
     company = await CompanyFactory(city_id=city.id)
     vacancy = await VacancyFactory(company_id=company.id)
+    vacancy_del = await VacancyFactory(company_id=company.id)
 
-    return vacancy
+    return {"vacancy": vacancy, "vacancy_del": vacancy_del}

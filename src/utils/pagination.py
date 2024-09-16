@@ -18,8 +18,8 @@ async def paginate(
 ) -> dict:
     if not paginate_dict:
         paginate_dict = {"current_page": 1, "limit": 20}
-    not_paginated_data = await repository.filter(filters=filters)
-    paginated_data = await repository.filter(filters=filters, paginate=paginate_dict)
+    not_paginated_data = await repository.fetch(filters=filters)
+    paginated_data = await repository.fetch(filters=filters, paginate=paginate_dict)
     return {
         "pagination": PaginationSchema(
             count=len(not_paginated_data),

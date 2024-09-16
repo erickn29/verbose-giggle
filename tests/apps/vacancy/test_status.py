@@ -3,15 +3,15 @@ import uuid
 
 class TestStatus:
     async def test_vacancy_list_200(self, client, vacancy_status):
-        response = await client.get("/api/v1/vacancy/")
+        response = await client.get("/api/v1/job/vacancy/")
         assert response.status_code == 200
 
     async def test_vacancy_200(self, client, vacancy_status):
-        response = await client.get(f"/api/v1/vacancy/{str(vacancy_status.id)}/")
+        response = await client.get(f"/api/v1/job/vacancy/{str(vacancy_status["vacancy"].id)}/")
         assert response.status_code == 200
 
     async def test_vacancy_detail_404(self, client):
-        response = await client.get(f"/api/v1/vacancy/{str(uuid.uuid4())}/")
+        response = await client.get(f"/api/v1/job/vacancy/{str(uuid.uuid4())}/")
         assert response.status_code == 404
 
     async def test_create_201(self, client, vacancy_status):
@@ -33,7 +33,7 @@ class TestStatus:
             },
             "tool": [{"name": "qwerty"}, {"name": "asdfg"}],
         }
-        response = await client.post("/api/v1/vacancy/", json=data)
+        response = await client.post("/api/v1/job/vacancy/", json=data)
         assert response.status_code == 201
 
     async def test_create_422(self, client, vacancy_status):
@@ -55,7 +55,7 @@ class TestStatus:
             },
             "tool": [{"name": "qwerty"}, {"name": "asdfg"}],
         }
-        response = await client.post("/api/v1/vacancy/", json=data)
+        response = await client.post("/api/v1/job/vacancy/", json=data)
         assert response.status_code == 422
 
     async def test_update_201(self, client, vacancy_status):
@@ -78,7 +78,7 @@ class TestStatus:
             "tool": [{"name": "asdfg"}],
         }
         response = await client.put(
-            f"/api/v1/vacancy/{str(vacancy_status.id)}/", json=data
+            f"/api/v1/job/vacancy/{str(vacancy_status["vacancy"].id)}/", json=data
         )
         assert response.status_code == 201
 
@@ -104,7 +104,7 @@ class TestStatus:
             "tool": [{"name": "asdfg"}],
         }
         response = await client.put(
-            f"/api/v1/vacancy/{str(vacancy_status.id)}/", json=data
+            f"/api/v1/job/vacancy/{str(vacancy_status["vacancy"].id)}/", json=data
         )
         assert response.status_code == 422
 
@@ -127,13 +127,15 @@ class TestStatus:
             },
             "tool": [{"name": "asdfg"}],
         }
-        response = await client.put(f"/api/v1/vacancy/{str(uuid.uuid4())}/", json=data)
+        response = await client.put(
+            f"/api/v1/job/vacancy/{str(uuid.uuid4())}/", json=data
+        )
         assert response.status_code == 404
 
     async def test_delete_204(self, client, vacancy_status):
-        response = await client.delete(f"/api/v1/vacancy/{str(vacancy_status.id)}/")
+        response = await client.delete(f"/api/v1/job/vacancy/{str(vacancy_status["vacancy_del"].id)}/")
         assert response.status_code == 204
 
     async def test_delete_404(self, client, vacancy_status):
-        response = await client.delete(f"/api/v1/vacancy/{str(uuid.uuid4())}/")
+        response = await client.delete(f"/api/v1/job/vacancy/{str(uuid.uuid4())}/")
         assert response.status_code == 404

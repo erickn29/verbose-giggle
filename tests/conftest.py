@@ -4,10 +4,10 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from uuid import uuid4
 
-from tests.model import Base
-from src.core.database import db_conn
-from src.core.settings import settings
-from src.main import app
+from base.model import Base
+from core.database import db_conn
+from core.settings import settings
+from main import app
 
 # from src.tests.factory.factory import UserFactory
 import pytest
@@ -31,28 +31,27 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, Any, None]:
     loop.close()
 
 
-# @pytest.fixture(scope="session")
-# def create_and_drop_test_db():
-#     async_db_url = settings.db.url(db_name=f"test_db_{uuid4().hex[:5]}")
-#     db_url = async_db_url.replace("postgresql+asyncpg", "postgresql")
-#     if not database_exists(db_url):
-#         print(db_url)
-#         create_database(db_url)
+@pytest.fixture(scope="session")
+def create_and_drop_test_db():
+    async_db_url = settings.db.url(db_name=f"test_db_{uuid4().hex[:5]}")
+    db_url = async_db_url.replace("postgresql+asyncpg", "postgresql")
+    if not database_exists(db_url):
+        print(db_url)
+        create_database(db_url)
 
-#     yield async_db_url
+    yield async_db_url
 
-#     if database_exists(db_url):
-#         drop_database(db_url.replace("postgresql+asyncpg", "postgresql"))
+    if database_exists(db_url):
+        drop_database(db_url.replace("postgresql+asyncpg", "postgresql"))
 
 
 @pytest_asyncio.fixture(scope="session")
-async def engine() -> AsyncGenerator:
+async def engine(create_and_drop_test_db) -> AsyncGenerator:
     engine = create_async_engine(
-        settings.db.url(),
+        create_and_drop_test_db,
         echo=False,
         poolclass=NullPool,
     )
-    print("TEST DB: ", settings.db.url())
     yield engine
     await engine.dispose()
 

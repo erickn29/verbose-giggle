@@ -26,7 +26,7 @@ class BaseService:
         return await self.repository.all(order_by)
 
     async def fetch(self, filters: dict, order_by: list = None):
-        return await self.repository.filter(filters, order_by)
+        return await self.repository.fetch(filters, order_by)
 
     async def get_or_create(self, obj: BaseModel):
         return await self.repository.get_or_create(obj)

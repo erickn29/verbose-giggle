@@ -1,7 +1,6 @@
 from collections.abc import AsyncGenerator
 
 from core.settings import settings
-
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,

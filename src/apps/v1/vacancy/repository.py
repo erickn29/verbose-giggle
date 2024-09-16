@@ -13,7 +13,6 @@ from apps.v1.vacancy.model import (
     VacancyTool,
 )
 from repository.alchemy_orm import SQLAlchemyRepository
-
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -30,7 +30,7 @@ updated_at = Annotated[
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=settings.db.naming_convention)
-    __table_args__ = {'extend_existing': True}
+    # __table_args__ = {'extend_existing': True}
 
     id: Mapped[uuid_pk]
     created_at: Mapped[created_at]

@@ -31,7 +31,7 @@ class BaseAsyncRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def filter(
+    async def fetch(
         self, filters: dict = None, order_by: list = None, paginate: dict = None
     ):
         raise NotImplementedError

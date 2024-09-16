@@ -51,6 +51,23 @@ test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypo
 trio = ["trio (>=0.23)"]
 
 [[package]]
+name = "async-factory-boy"
+version = "1.0.1"
+description = "factory_boy extension with asynchronous ORM support"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "async_factory_boy-1.0.1-py2.py3-none-any.whl", hash = "sha256:a0a652776ee164b60a45be06aca44a18781710447de1c534dda82d6cfe23f026"},
+    {file = "async_factory_boy-1.0.1.tar.gz", hash = "sha256:af3a42d9c26b86cc427faf5159ac2e8541b5564bf30424282eb866620af4e143"},
+]
+
+[package.dependencies]
+factory-boy = ">=3.0.0"
+
+[package.extras]
+dev = ["SQLAlchemy", "coverage", "flake8", "isort", "tortoise-orm (>=0.18.1)", "tox", "wheel (>=0.32.0)", "zest.releaser[recommended]"]
+
+[[package]]
 name = "asyncpg"
 version = "0.29.0"
 description = "An asyncio PostgreSQL driver"
@@ -1942,4 +1959,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c920db762df77fe04a11e2f5102d38813585007f34ab031eb640b53cb06ab96e"
+content-hash = "9d96ed12ff7f8d5d3ac0fbe5c1b2fdae53c86eb3bc75326e913cd5ac0afd9e5c"
