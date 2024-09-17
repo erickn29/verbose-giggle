@@ -9,12 +9,12 @@ from apps.v1.vacancy.schema import (
     VacancyInputSchema,
 )
 from apps.v1.vacancy.service import VacancyService
+from apps.v1.vacancy.utils.parser.analyzer import Analyzer
+from apps.v1.vacancy.utils.parser.base import BaseParser
 from bs4 import BeautifulSoup
-from core.database import db_conn
+from core.database import async_session_maker
 from fastapi import HTTPException
 from tqdm import tqdm
-from utils.parser.analyzer import Analyzer
-from utils.parser.base import BaseParser
 
 
 class HeadHunterParser(BaseParser):
@@ -62,8 +62,11 @@ class HeadHunterParser(BaseParser):
                 f"&page={str(last_number)}", f"&page={str(page_number)}"
             )
             last_link = link
-            vacancies_list.extend(self.get_vacancies_links(link))
-            last_number = page_number
+            try:
+                vacancies_list.extend(self.get_vacancies_links(link))
+                last_number = page_number
+            except Exception:
+                continue
         print(len(vacancies_list), len(set(vacancies_list)))
         return vacancies_list
 
@@ -176,9 +179,13 @@ class HeadHunterParser(BaseParser):
         )
         return vacancy_schema
 
-    async def get_vacancies(self, save: bool = True, only_one: bool = False):
+    async def get_vacancies(
+        self,
+        save: bool = True,
+        only_one: bool = False,
+    ):
         links = self.get_all_vacancies_links(only_one=only_one)
-        vacancy_service = VacancyService(session=db_conn.get_session())
+        vacancy_service = VacancyService(session=async_session_maker())
         if only_one:
             return self.get_vacancy_schema(links[0])
         for link in tqdm(links):

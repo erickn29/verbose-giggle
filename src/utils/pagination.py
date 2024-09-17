@@ -1,7 +1,7 @@
 from math import ceil
 
 from pydantic import BaseModel
-from repository.base import BaseAsyncRepository
+from repository.alchemy_orm import SQLAlchemyRepository
 
 
 class PaginationSchema(BaseModel):
@@ -14,7 +14,7 @@ class PaginationSchema(BaseModel):
 async def paginate(
     paginate_dict: dict,
     filters: dict,
-    repository: BaseAsyncRepository,
+    repository: SQLAlchemyRepository,
 ) -> dict:
     if not paginate_dict:
         paginate_dict = {"current_page": 1, "limit": 20}

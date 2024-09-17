@@ -1,7 +1,9 @@
-from apps.v1.vacancy.model import Employee, Employer
+
 from base.model import Base
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from apps.v1.auth.model import RecoveryToken
 
 
 class User(Base):
@@ -20,7 +22,7 @@ class User(Base):
         back_populates="user", lazy="selectin"
     )
 
-    employee: Mapped[Employee] = relationship(
+    employee = relationship(
         "Employee",
         back_populates="user",
         uselist=False,
@@ -28,7 +30,7 @@ class User(Base):
         passive_deletes=True,
         lazy="joined",
     )
-    employer: Mapped[Employer] = relationship(
+    employer = relationship(
         "Employer",
         back_populates="user",
         uselist=False,

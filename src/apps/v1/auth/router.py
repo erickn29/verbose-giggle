@@ -13,12 +13,12 @@ from apps.v1.auth.schema import (
 from apps.v1.auth.service import RecoveryTokenService, RecoveryTokenUpdate
 from apps.v1.auth.utils.auth import JWTAuthenticationBackend as auth
 from apps.v1.auth.utils.auth import is_authenticated
+from apps.v1.user.schema import UserCreateInputSchema
 from apps.v1.user.service import UserService
 from core.database import db_conn
 from core.exceptions import exception
 from core.settings import settings
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm as OAuthForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.mail import Mail
 
@@ -28,13 +28,13 @@ router = APIRouter()
 
 @router.post("/login/")
 async def login_for_access_token(
-    form_data: Annotated[OAuthForm, Depends()],
+    form_data: UserCreateInputSchema,
     session: Annotated[
         AsyncSession,
         Depends(db_conn.get_session),
     ],
 ):
-    return await auth(session=session).login(form_data.username, form_data.password)
+    return await auth(session=session).login(form_data.email, form_data.password)
 
 
 @router.post("/token/refresh/")

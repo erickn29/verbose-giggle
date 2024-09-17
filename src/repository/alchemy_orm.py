@@ -74,9 +74,9 @@ class SQLAlchemyRepository:
         }
         order_by = order_by or [self.model.created_at.desc()]
         query = select(self.model)
-        if not filters:
-            result = await self.session.execute(query)
-            return result.scalars().all()
+        # if not filters:
+        #     result = await self.session.execute(query)
+        #     return result.scalars().all()
 
         filter_conditions = []
         for key, value in filters.items():
