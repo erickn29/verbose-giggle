@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
+from apps.v1.user.model import User
 from base.model import Base
 from sqlalchemy import (
     Boolean,
@@ -14,8 +15,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from apps.v1.user.model import User
 
 
 class Language(Enum):
@@ -181,7 +180,9 @@ class Employer(Base):
         nullable=False,
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="employer", uselist=False, lazy="joined")
+    user: Mapped["User"] = relationship(
+        "User", back_populates="employer", uselist=False, lazy="joined"
+    )
     company = relationship(
         "Company", back_populates="employer", uselist=False, lazy="joined"
     )

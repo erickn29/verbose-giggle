@@ -1,9 +1,10 @@
+from datetime import datetime
 
+from apps.v1.auth.model import RecoveryToken
+from apps.v1.interview.model import Chat
 from base.model import Base
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from apps.v1.auth.model import RecoveryToken
 
 
 class User(Base):
@@ -17,11 +18,15 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(doc="Админ", default=False)
     is_verified: Mapped[bool] = mapped_column(doc="Email подтвержден", default=False)
     coin: Mapped[int] = mapped_column(doc="Токены", default=0)
+    subscription: Mapped[datetime] = mapped_column(doc="Подписка до", nullable=True)
 
     recovery_tokens: Mapped[list["RecoveryToken"]] = relationship(
         back_populates="user", lazy="selectin"
     )
-
+    chats: Mapped[list[Chat]] = relationship(
+        "Chat", back_populates="user", lazy="selectin"
+    )
+    answers = relationship("Answer", back_populates="user", lazy="selectin")
     employee = relationship(
         "Employee",
         back_populates="user",
