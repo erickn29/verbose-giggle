@@ -58,6 +58,7 @@ class Message(Base):
         ForeignKey("chat.id", ondelete="CASCADE"),
         doc="Сообщение"
     )
+    is_user_message: Mapped[bool]
     text: Mapped[str] = mapped_column(Text, doc="Текст сообщения")
     
     chat = relationship("Chat", back_populates="messages", lazy="joined")

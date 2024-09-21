@@ -12,6 +12,7 @@ class UserOutputSchema(BaseModel):
     is_active: bool
     is_active: bool
     coin: int
+    subscription: datetime | None
     created_at: datetime
     updated_at: datetime
 
