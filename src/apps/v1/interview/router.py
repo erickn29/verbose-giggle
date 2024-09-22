@@ -1,7 +1,11 @@
 from typing import Annotated
 
 from apps.v1.auth.utils.auth import is_authenticated
-from apps.v1.interview.schema import ChatCreateInputSchema, ChatCreateOutputSchema
+from apps.v1.interview.schema import (
+    ChatCreateInputSchema,
+    ChatCreateOutputSchema,
+    ChatListOutputSchema,
+)
 from apps.v1.interview.service import ChatService
 from apps.v1.user.model import User
 from core.database import db_conn
@@ -22,6 +26,17 @@ async def create_chat(
     chat_service = ChatService(session)
     schema.user_id = user.id
     return await chat_service.create(schema)
+
+
+@router.get("/chat/", status_code=200, response_model=ChatListOutputSchema)
+async def get_chats(
+    session: Annotated[AsyncSession, Depends(db_conn.get_session)],
+    user: Annotated[User, Depends(is_authenticated)],
+):
+    chat_service = ChatService(session)
+    return ChatListOutputSchema(
+        items=await chat_service.fetch(filters={"user_id": user.id})
+    )
 
 
 @router.post("/q/")

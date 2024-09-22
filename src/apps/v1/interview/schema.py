@@ -46,6 +46,10 @@ class ChatCreateOutputSchema(BaseModel):
     messages: list[MessageCreateOutputSchema]
     created_at: datetime
     updated_at: datetime
+    
+    
+class ChatListOutputSchema(BaseModel):
+    items: list[ChatCreateOutputSchema]
 
 
 class QuestionOutputSchema(BaseModel):
