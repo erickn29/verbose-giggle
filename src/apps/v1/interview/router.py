@@ -37,6 +37,13 @@ async def get_chats(
     return ChatListOutputSchema(
         items=await chat_service.fetch(filters={"user_id": user.id})
     )
+    
+    
+async def get_chat(
+    session: Annotated[AsyncSession, Depends(db_conn.get_session)],
+    user: Annotated[User, Depends(is_authenticated)],
+):
+    pass
 
 
 @router.post("/q/")

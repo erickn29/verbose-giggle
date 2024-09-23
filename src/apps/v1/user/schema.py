@@ -9,7 +9,7 @@ class UserOutputSchema(BaseModel):
 
     id: UUID
     email: str
-    is_active: bool
+    is_admin: bool
     is_active: bool
     coin: int
     subscription: datetime | None
