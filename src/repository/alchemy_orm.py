@@ -69,6 +69,7 @@ class SQLAlchemyRepository:
             "lt": lambda column, value: column < value,
             "lte": lambda column, value: column <= value,
             "in": lambda column, value: column.in_(value),
+            "not_in": lambda column, value: column.not_in(value),
             "like": lambda column, value: column.like(f"%{value}%"),
             "ilike": lambda column, value: column.ilike(f"%{value}%"),
         }

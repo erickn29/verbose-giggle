@@ -1,6 +1,8 @@
 from typing import Annotated
 from uuid import UUID
 
+from requests import session
+
 from apps.v1.auth.utils.auth import is_authenticated
 from apps.v1.interview.schema import (
     ChatCreateInputSchema,
@@ -8,7 +10,7 @@ from apps.v1.interview.schema import (
     ChatDetailOutputSchema,
     ChatListOutputSchema,
 )
-from apps.v1.interview.service import ChatService
+from apps.v1.interview.service import ChatService, QuestionService
 from apps.v1.user.model import User
 from core.database import db_conn
 from core.exceptions import exception
@@ -55,10 +57,15 @@ async def get_chat(
     return chat
 
 
-@router.post("/q/")
-async def send_question():
+@router.get("/q/{chat_id}/", status_code=200)
+async def send_question(
+    session: Annotated[AsyncSession, Depends(db_conn.get_session)],
+    user: Annotated[User, Depends(is_authenticated)],
+    chat_id: UUID,
+):
     """Генерирует и отправляет вопрос пользователю"""
-    return {"status": "ok"}
+    question_service = QuestionService(session)
+    return await question_service.get_question(chat_id=chat_id, user=user)
 
 
 @router.post("/a/")
