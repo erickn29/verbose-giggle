@@ -43,7 +43,19 @@ class ChatCreateOutputSchema(BaseModel):
     user_id: UUID
     title: str
     config: ChatConfigSchema
-    # messages: list[MessageCreateOutputSchema]
+    messages: list[MessageCreateOutputSchema]
+    created_at: datetime
+    updated_at: datetime
+    
+    
+class ChatDetailOutputSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: UUID
+    user_id: UUID
+    title: str
+    config: ChatConfigSchema
+    messages: list[MessageCreateOutputSchema]
     created_at: datetime
     updated_at: datetime
     

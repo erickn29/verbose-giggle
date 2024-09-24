@@ -1,14 +1,17 @@
 from typing import Annotated
+from uuid import UUID
 
 from apps.v1.auth.utils.auth import is_authenticated
 from apps.v1.interview.schema import (
     ChatCreateInputSchema,
     ChatCreateOutputSchema,
+    ChatDetailOutputSchema,
     ChatListOutputSchema,
 )
 from apps.v1.interview.service import ChatService
 from apps.v1.user.model import User
 from core.database import db_conn
+from core.exceptions import exception
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,13 +40,19 @@ async def get_chats(
     return ChatListOutputSchema(
         items=await chat_service.fetch(filters={"user_id": user.id})
     )
-    
-    
+
+
+@router.get("/chat/{chat_id}/", status_code=200, response_model=ChatDetailOutputSchema)
 async def get_chat(
+    chat_id: UUID,
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
     user: Annotated[User, Depends(is_authenticated)],
 ):
-    pass
+    chat_service = ChatService(session)
+    chat = await chat_service.get(chat_id)
+    if chat.user_id != user.id:
+        raise exception(403, "Доступ запрещен")
+    return chat
 
 
 @router.post("/q/")
