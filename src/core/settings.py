@@ -31,6 +31,10 @@ class AuthConfig(BaseModel):
     ALGORITHM: str = "HS256"
     PWD_CONTEXT: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
     OAUTH2_SCHEME: OAuth2PasswordBearer = OAuth2PasswordBearer("/api/v1/auth/token/")
+    
+    
+class AIConfig(BaseModel):
+    SERVICE_URL: str = "localhost"
 
 
 class EmailConfig(BaseModel):
@@ -113,6 +117,7 @@ class Settings(BaseSettings):
     app: AppConfig = AppConfig()
     db: DatabaseConfig = DatabaseConfig()
     auth: AuthConfig = AuthConfig()
+    ai: AIConfig = AIConfig()
     email: EmailConfig = EmailConfig()
     cors: CorsConfig = CorsConfig()
     redis: RedisConfig = RedisConfig()

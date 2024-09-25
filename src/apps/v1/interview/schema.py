@@ -75,9 +75,13 @@ class QuestionOutputSchema(BaseModel):
     
 class AnswerCreateInputSchema(BaseModel):
     question_id: UUID
-    user_id: UUID
+    user_id: UUID | None = None
     text: str
-    score: int
+    score: int = 0
+    
+    
+class AnswerUpdateInputSchema(BaseModel):
+    score: int | None = None
     
     
 class AnswerCreateOutputSchema(BaseModel):

@@ -1,16 +1,23 @@
 from typing import Annotated
 from uuid import UUID
 
-from requests import session
-
 from apps.v1.auth.utils.auth import is_authenticated
 from apps.v1.interview.schema import (
+    AnswerCreateInputSchema,
+    AnswerCreateOutputSchema,
     ChatCreateInputSchema,
     ChatCreateOutputSchema,
     ChatDetailOutputSchema,
     ChatListOutputSchema,
+    MessageCreateInputSchema,
 )
-from apps.v1.interview.service import ChatService, QuestionService
+from apps.v1.interview.service import (
+    AnswerService,
+    ChatService,
+    MessageService,
+    QuestionService,
+)
+from apps.v1.interview.utils.request import get_evaluation
 from apps.v1.user.model import User
 from core.database import db_conn
 from core.exceptions import exception
@@ -68,7 +75,13 @@ async def send_question(
     return await question_service.get_question(chat_id=chat_id, user=user)
 
 
-@router.post("/a/")
-async def get_answer():
+@router.post("/a/{chat_id}/", status_code=201, response_model=AnswerCreateOutputSchema)
+async def get_answer(
+    session: Annotated[AsyncSession, Depends(db_conn.get_session)],
+    user: Annotated[User, Depends(is_authenticated)],
+    chat_id: UUID,
+    schema: AnswerCreateInputSchema,
+):
     """Принимает ответ от пользователя и дает оценку"""
-    return {"status": "ok"}
+    answer_service = AnswerService(session)
+    return await answer_service.get_evaluation(schema, user, chat_id)
