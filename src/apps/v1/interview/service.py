@@ -18,9 +18,10 @@ from apps.v1.interview.schema import (
     MessageType,
 )
 from apps.v1.interview.utils.request import get_evaluation
-from apps.v1.user.model import User
+from apps.v1.user.service import UserService
 from base.service import BaseService
 from core.settings import settings
+from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -33,13 +34,14 @@ class QuestionService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=QuestionRepository)
 
-    async def get_question(self, chat_id: UUID, user: User) -> str:
+    async def get_question(self, chat_id: UUID, user_schema: UserModelSchema) -> str:
         chat_service = ChatService(self.session)
-        question_service = QuestionService(self.session)
+        user_service = UserService(self.session)
 
+        user = await user_service.get(user_schema.id)
         chat = await chat_service.get(chat_id)
         used_question_ids = [answer.question_id for answer in user.answers]
-        questions_by_chat_config = await question_service.fetch(
+        questions_by_chat_config = await self.fetch(
             {
                 "technology": {
                     "in": [t.get("technology") for t in chat.config["technologies"]]
@@ -51,7 +53,28 @@ class QuestionService(BaseService):
             }
         )
         if not questions_by_chat_config:
-            return "Все вопросы кончились =("
+            questions = await self.fetch(
+                {
+                    "technology": {
+                        "in": [t.get("technology") for t in chat.config["technologies"]]
+                    },
+                    "complexity": {
+                        "in": [t.get("complexity") for t in chat.config["technologies"]]
+                    },
+                },
+                ["created_at", ]
+            )
+            question = questions[0]
+            message_service = MessageService(self.session)
+            await message_service.create(
+                MessageCreateInputSchema(
+                    chat_id=chat_id,
+                    text=question.text,
+                    type=MessageType.QUESTION.value,
+                    question_id=question.id,
+                )
+            )
+            return question
         question = random.choice(questions_by_chat_config)
         message_service = MessageService(self.session)
         await message_service.create(
@@ -59,7 +82,7 @@ class QuestionService(BaseService):
                 chat_id=chat_id,
                 text=question.text,
                 type=MessageType.QUESTION.value,
-                question_id=question.id
+                question_id=question.id,
             )
         )
         return question
@@ -72,13 +95,13 @@ class AnswerService(BaseService):
     async def get_answer(
         self,
         schema: AnswerCreateInputSchema,
-        user: User,
+        user_schema: UserModelSchema,
         chat_id: UUID,
     ) -> Answer:
         chat_service = ChatService(self.session)
         message_service = MessageService(self.session)
         evaluation_service = EvaluationService(self.session)
-        schema.user_id = user.id
+        schema.user_id = user_schema.id
 
         chat = await chat_service.get(chat_id)
         answer = await self.create(schema)
@@ -92,12 +115,12 @@ class AnswerService(BaseService):
         )
         await evaluation_service.get_evaluation(chat, answer)
         return answer
-        
-        
+
+
 class EvaluationService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=EvaluationRepository)
-        
+
     async def get_evaluation(self, chat: Chat, answer: Answer):
         message_service = MessageService(self.session)
         technologies = [t.get("technology") for t in chat.config["technologies"]]
@@ -132,6 +155,7 @@ class EvaluationService(BaseService):
                 "stream": False,
             },
         )
+        print("get response from model")
         if (
             not response
             or not response.get("choices")
@@ -145,36 +169,37 @@ class EvaluationService(BaseService):
                     type=MessageType.EVALUATION.value,
                 )
             )
+            print("no response data")
             return
-        evaluation_text = response["choices"][0]["message"]["content"].strip().replace("\n", "<br>")
+        evaluation_text = (
+            response["choices"][0]["message"]["content"].strip().replace("\n", "<br>")
+        )
         evaluation = await self.create(
-            EvaluationInputSchema(
-                answer_id=answer.id,
-                text=evaluation_text
-            )
+            EvaluationInputSchema(answer_id=answer.id, text=evaluation_text)
         )
         await message_service.create(
             MessageCreateInputSchema(
                 chat_id=chat.id,
                 text=evaluation_text,
                 type=MessageType.EVALUATION.value,
-                evaluation_id=evaluation.id
+                evaluation_id=evaluation.id,
             )
         )
+        print("save message")
         if "Оценка: " in evaluation_text and "/10" in evaluation_text:
             eval_string = evaluation_text.split("/10")[0]
             eval_num = eval_string.split(" ")[-1]
             if eval_num.isdigit():
-                await self.update(
+                answer_service = AnswerService(session=self.session)
+                await answer_service.update(
                     answer.id, AnswerUpdateInputSchema(score=int(eval_num))
                 )
-        
+                print("updated answer score")
+                return
+        print("return from get_evaluation")
+        return
 
 
 class MessageService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=MessageRepository)
-        
-        
-if __name__ == "__main__":
-    if not 0 or 1 or 0: print("false")

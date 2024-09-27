@@ -9,19 +9,17 @@ from apps.v1.interview.schema import (
     ChatCreateOutputSchema,
     ChatDetailOutputSchema,
     ChatListOutputSchema,
-    MessageCreateInputSchema,
+    QuestionOutputSchema,
 )
 from apps.v1.interview.service import (
     AnswerService,
     ChatService,
-    MessageService,
     QuestionService,
 )
-from apps.v1.interview.utils.request import get_evaluation
-from apps.v1.user.model import User
 from core.database import db_conn
 from core.exceptions import exception
 from fastapi import APIRouter, Depends
+from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -31,7 +29,7 @@ router = APIRouter()
 @router.post("/chat/", response_model=ChatCreateOutputSchema, status_code=201)
 async def create_chat(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
     schema: ChatCreateInputSchema,
 ):
     """Создает чат с новым пользователем"""
@@ -43,7 +41,7 @@ async def create_chat(
 @router.get("/chat/", status_code=200, response_model=ChatListOutputSchema)
 async def get_chats(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
 ):
     chat_service = ChatService(session)
     return ChatListOutputSchema(
@@ -55,7 +53,7 @@ async def get_chats(
 async def get_chat(
     chat_id: UUID,
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
 ):
     chat_service = ChatService(session)
     chat = await chat_service.get(chat_id)
@@ -64,21 +62,22 @@ async def get_chat(
     return chat
 
 
-@router.get("/q/{chat_id}/", status_code=200)
+@router.get("/q/{chat_id}/", status_code=200, response_model=QuestionOutputSchema)
 async def send_question(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
     chat_id: UUID,
 ):
     """Генерирует и отправляет вопрос пользователю"""
     question_service = QuestionService(session)
-    return await question_service.get_question(chat_id=chat_id, user=user)
+    question = await question_service.get_question(chat_id=chat_id, user_schema=user)
+    return question
 
 
 @router.post("/a/{chat_id}/", status_code=201, response_model=AnswerCreateOutputSchema)
 async def get_answer(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
     chat_id: UUID,
     schema: AnswerCreateInputSchema,
 ):

@@ -14,6 +14,7 @@ from jwt import DecodeError, ExpiredSignatureError
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+from schemas.user import UserModelSchema
 from utils.cache import cache
 
 
@@ -49,7 +50,7 @@ class JWTAuthenticationBackend:
         # self.request: Request = request
         self.user_service = UserService(session=session)
 
-    async def __call__(self, request: Request) -> User:
+    async def __call__(self, request: Request) -> UserModelSchema:
         """Метод вызывает проверку активности пользователя"""
         if not request or not request.headers.get("Authorization"):
             raise exception(401, extra="Заголовок авторизации отсутствует")
@@ -132,22 +133,36 @@ class JWTAuthenticationBackend:
     async def _get_current_user(
         self,
         token: Annotated[str, Depends(settings.auth.OAUTH2_SCHEME)],
-    ) -> User:
+    ) -> UserModelSchema:
         """Возвращает текущего пользователя"""
-        credentials_exception = exception(401)
         payload = await self.validate_token(token)
         if not payload:
-            raise credentials_exception
+            raise exception(401)
         user_id: str = payload.get("id", "")
         if user_id is None:
-            raise credentials_exception
+            raise exception(401)
+        if user_schema := await cache.get_user(user_id):
+            return user_schema
         token_data = TokenData(id=user_id)
         user = await self._get_user_from_db("id", token_data.id)
         if str(user.id) != token_data.id:
-            raise credentials_exception
-        return user
+            raise exception(401)
+        user_schema = UserModelSchema(
+                id=user.id,
+                email=user.email,
+                password=user.password,
+                is_active=user.is_active,
+                is_admin=user.is_admin,
+                is_verified=user.is_verified,
+                coin=user.coin,
+                subscription=user.subscription,
+                created_at=user.created_at,
+                updated_at=user.updated_at,
+            )
+        await cache.set_user(user_schema)
+        return user_schema
 
-    async def _check_user_is_active(self) -> User:
+    async def _check_user_is_active(self) -> UserModelSchema:
         """Проверяет статус пользователя"""
         current_user = await self._get_current_user(
             await settings.auth.OAUTH2_SCHEME(self.request)
@@ -168,5 +183,5 @@ def get_jwt_auth_backend(
 async def is_authenticated(
     request: Request,
     auth: JWTAuthenticationBackend = Depends(get_jwt_auth_backend),
-) -> User:
+) -> UserModelSchema:
     return await auth(request)

@@ -3,7 +3,6 @@ from typing import Annotated
 from apps.v1.auth.schema import PasswordRecoveryEmail
 from apps.v1.auth.service import RecoveryTokenService
 from apps.v1.auth.utils.auth import is_authenticated
-from apps.v1.user.model import User
 from apps.v1.user.schema import (
     EmailVerifyInputSchema,
     EmailVerifyOutputSchema,
@@ -17,6 +16,7 @@ from core.database import db_conn
 from core.exceptions import exception
 from core.settings import settings
 from fastapi import APIRouter, Depends
+from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -64,16 +64,12 @@ async def verify_email(
 async def update_user(
     schema: UserUpdateData,
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_authenticated)],
 ):
     user_service = UserService(session=session)
     return await user_service.update(user.id, schema)
 
 
 @router.get("/me/", response_model=UserOutputSchema)
-async def get_user(
-    session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[User, Depends(is_authenticated)],
-):
-    user_service = UserService(session=session)
-    return await user_service.get(user.id)
+async def get_user(user: Annotated[UserModelSchema, Depends(is_authenticated)]):
+    return user
