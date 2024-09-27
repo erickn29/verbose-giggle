@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from base.model import Base
-from sqlalchemy import JSON, ForeignKey, Text
+from sqlalchemy import JSON, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -33,8 +33,21 @@ class Answer(Base):
         doc="Пользователь",
     )
 
-    question = relationship("Question", back_populates="answers", lazy="joined")
+    question = relationship("Question", back_populates="answers", lazy="selectin")
     user = relationship("User", back_populates="answers", lazy="joined")
+    evaluations = relationship("Evaluation", back_populates="answer", lazy="selectin")
+    
+    
+class Evaluation(Base):
+    __tablename__ = "evaluation"
+    
+    answer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("answer.id", ondelete="CASCADE"),
+        doc="ID ответа",
+    )
+    text: Mapped[str] = mapped_column(Text, doc="Текст ответа модели")
+    
+    answer = relationship("Answer", back_populates="evaluations", lazy="joined")
     
     
 class Chat(Base):
@@ -58,7 +71,22 @@ class Message(Base):
         ForeignKey("chat.id", ondelete="CASCADE"),
         doc="Сообщение"
     )
-    is_user_message: Mapped[bool]
     text: Mapped[str] = mapped_column(Text, doc="Текст сообщения")
+    type: Mapped[str] = mapped_column(String, doc="Тип сообщения")
+    question_id: Mapped[UUID] = mapped_column(
+        ForeignKey("question.id", ondelete="CASCADE"),
+        doc="ID вопроса",
+        nullable=True,
+    )
+    answer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("answer.id", ondelete="CASCADE"),
+        doc="ID ответа",
+        nullable=True,
+    )
+    evaluation_id: Mapped[UUID] = mapped_column(
+        ForeignKey("evaluation.id", ondelete="CASCADE"),
+        doc="ID оценки",
+        nullable=True,
+    )
     
     chat = relationship("Chat", back_populates="messages", lazy="joined")

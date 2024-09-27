@@ -2,17 +2,20 @@ import random
 
 from uuid import UUID
 
-from apps.v1.interview.model import Answer
+from apps.v1.interview.model import Answer, Chat
 from apps.v1.interview.repository import (
     AnswerRepository,
     ChatRepository,
+    EvaluationRepository,
     MessageRepository,
     QuestionRepository,
 )
 from apps.v1.interview.schema import (
     AnswerCreateInputSchema,
     AnswerUpdateInputSchema,
+    EvaluationInputSchema,
     MessageCreateInputSchema,
+    MessageType,
 )
 from apps.v1.interview.utils.request import get_evaluation
 from apps.v1.user.model import User
@@ -55,7 +58,8 @@ class QuestionService(BaseService):
             MessageCreateInputSchema(
                 chat_id=chat_id,
                 text=question.text,
-                is_user_message=False,
+                type=MessageType.QUESTION.value,
+                question_id=question.id
             )
         )
         return question
@@ -65,7 +69,7 @@ class AnswerService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=AnswerRepository)
 
-    async def get_evaluation(
+    async def get_answer(
         self,
         schema: AnswerCreateInputSchema,
         user: User,
@@ -73,6 +77,7 @@ class AnswerService(BaseService):
     ) -> Answer:
         chat_service = ChatService(self.session)
         message_service = MessageService(self.session)
+        evaluation_service = EvaluationService(self.session)
         schema.user_id = user.id
 
         chat = await chat_service.get(chat_id)
@@ -81,28 +86,46 @@ class AnswerService(BaseService):
             MessageCreateInputSchema(
                 chat_id=chat.id,
                 text=answer.text,
-                is_user_message=True,
+                type=MessageType.ANSWER.value,
+                answer_id=answer.id,
             )
         )
+        await evaluation_service.get_evaluation(chat, answer)
+        return answer
+        
+        
+class EvaluationService(BaseService):
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, repository=EvaluationRepository)
+        
+    async def get_evaluation(self, chat: Chat, answer: Answer):
+        message_service = MessageService(self.session)
         technologies = [t.get("technology") for t in chat.config["technologies"]]
+        default_text = "Что-то пошло не так, попробуйте позже"
         prompt = f"""
         Ты - опытный разработчик. Ты эксперт в таких технологиях как 
-        {''.join(technologies)}. Ты проводишь собеседование и тебе нужно очень
-        тщательно выбрать кандидатов. Очень строго и внимательно проверяй то что я 
-        ввожу. В ответе дававй оценку тому, что ввел пользователь. Говори что верно 
-        и что неверно сказано.
+        {''.join(technologies)}. 
+        На вход тебе подается вопрос и ответ на него. 
+        Очень строго и внимательно проверяй правильность и полноту ответа на вопрос. 
+        В ответе дававй оценку ответу пользователя на вопрос. 
+        Говори что верно и что неверно сказано. Что можно добавить к ответу на вопрос.
         Формат ответа:
-        - оценка от 1 до 10
+        - оценка от 1 до 10 (например 5/10)
         - что сказано верно
         - что сказано неверно
         - рекомендации
+        """
+        question = answer.question
+        user_answer = f"""
+        Вопрос: {question.text}.
+        Ответ: {answer.text}.
         """
         response = await get_evaluation(
             url=settings.ai.SERVICE_URL,
             data={
                 "messages": [
                     {"role": "system", "content": prompt},
-                    {"role": "user", "content": answer.text},
+                    {"role": "user", "content": user_answer},
                 ],
                 "temperature": 0.7,
                 "max_tokens": -1,
@@ -110,29 +133,48 @@ class AnswerService(BaseService):
             },
         )
         if (
-            response
-            and response.get("choices")
-            and response["choices"][0].get("message")
-            and response["choices"][0]["message"].get("content")
+            not response
+            or not response.get("choices")
+            or not response["choices"][0].get("message")
+            or not response["choices"][0]["message"].get("content")
         ):
-            evaluation = response["choices"][0]["message"]["content"].strip()
             await message_service.create(
                 MessageCreateInputSchema(
                     chat_id=chat.id,
-                    text=evaluation,
-                    is_user_message=False,
+                    text=default_text,
+                    type=MessageType.EVALUATION.value,
                 )
             )
-            if "Оценка: " in evaluation and "/10" in evaluation:
-                eval_string = evaluation.split("/10")[0]
-                eval_num = eval_string.split(" ")[-1]
-                if eval_num.isdigit():
-                    await self.update(
-                        answer.id, AnswerUpdateInputSchema(score=int(eval_num))
-                    )
-            return answer
+            return
+        evaluation_text = response["choices"][0]["message"]["content"].strip().replace("\n", "<br>")
+        evaluation = await self.create(
+            EvaluationInputSchema(
+                answer_id=answer.id,
+                text=evaluation_text
+            )
+        )
+        await message_service.create(
+            MessageCreateInputSchema(
+                chat_id=chat.id,
+                text=evaluation_text,
+                type=MessageType.EVALUATION.value,
+                evaluation_id=evaluation.id
+            )
+        )
+        if "Оценка: " in evaluation_text and "/10" in evaluation_text:
+            eval_string = evaluation_text.split("/10")[0]
+            eval_num = eval_string.split(" ")[-1]
+            if eval_num.isdigit():
+                await self.update(
+                    answer.id, AnswerUpdateInputSchema(score=int(eval_num))
+                )
+        
 
 
 class MessageService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=MessageRepository)
+        
+        
+if __name__ == "__main__":
+    if not 0 or 1 or 0: print("false")

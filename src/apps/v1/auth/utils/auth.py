@@ -14,6 +14,7 @@ from jwt import DecodeError, ExpiredSignatureError
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
+from utils.cache import cache
 
 
 class Token(BaseModel):

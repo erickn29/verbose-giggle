@@ -84,4 +84,4 @@ async def get_answer(
 ):
     """Принимает ответ от пользователя и дает оценку"""
     answer_service = AnswerService(session)
-    return await answer_service.get_evaluation(schema, user, chat_id)
+    return await answer_service.get_answer(schema, user, chat_id)

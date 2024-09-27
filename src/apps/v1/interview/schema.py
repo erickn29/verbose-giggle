@@ -1,13 +1,24 @@
 from datetime import datetime
+from enum import Enum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class MessageType(Enum):
+    QUESTION = "question"
+    ANSWER = "answer"
+    EVALUATION = "evaluation"
     
     
 class MessageCreateInputSchema(BaseModel):
     chat_id: UUID
     text: str
-    is_user_message: bool
+    type: str
+    question_id: UUID | None = None
+    answer_id: UUID | None = None
+    evaluation_id: UUID | None = None
     
     
 class MessageCreateOutputSchema(BaseModel):
@@ -16,7 +27,10 @@ class MessageCreateOutputSchema(BaseModel):
     id: UUID
     chat_id: UUID
     text: str
-    is_user_message: bool
+    type: str
+    question_id: UUID | None = None
+    answer_id: UUID | None = None
+    evaluation_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -94,3 +108,8 @@ class AnswerCreateOutputSchema(BaseModel):
     score: int
     created_at: datetime
     updated_at: datetime
+    
+    
+class EvaluationInputSchema(BaseModel):
+    answer_id: UUID
+    text: str

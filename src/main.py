@@ -1,6 +1,9 @@
 import uvicorn
 
+from admin.admin import init_admin
+from admin.auth import authentication_backend
 from apps.router import router as routers
+from core.database import db_conn
 from core.exceptions import BaseHTTPException
 from core.settings import settings
 from fastapi import FastAPI, Request
@@ -28,6 +31,13 @@ app.add_middleware(
 
 
 app.include_router(routers)
+
+init_admin(
+    title="< itjob />",
+    app=app,
+    engine=db_conn.engine,
+    authentication_backend=authentication_backend,
+)
 
 
 @app.exception_handler(BaseHTTPException)
