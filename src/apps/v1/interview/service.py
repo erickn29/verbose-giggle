@@ -155,7 +155,6 @@ class EvaluationService(BaseService):
                 "stream": False,
             },
         )
-        print("get response from model")
         if (
             not response
             or not response.get("choices")
@@ -169,7 +168,6 @@ class EvaluationService(BaseService):
                     type=MessageType.EVALUATION.value,
                 )
             )
-            print("no response data")
             return
         evaluation_text = (
             response["choices"][0]["message"]["content"].strip().replace("\n", "<br>")
@@ -185,7 +183,6 @@ class EvaluationService(BaseService):
                 evaluation_id=evaluation.id,
             )
         )
-        print("save message")
         if "Оценка: " in evaluation_text and "/10" in evaluation_text:
             eval_string = evaluation_text.split("/10")[0]
             eval_num = eval_string.split(" ")[-1]
@@ -194,9 +191,7 @@ class EvaluationService(BaseService):
                 await answer_service.update(
                     answer.id, AnswerUpdateInputSchema(score=int(eval_num))
                 )
-                print("updated answer score")
                 return
-        print("return from get_evaluation")
         return
 
 

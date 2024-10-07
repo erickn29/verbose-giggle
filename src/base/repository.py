@@ -1,123 +1,212 @@
 from collections.abc import Sequence
+from operator import and_
 from typing import Any
+from uuid import UUID
 
-from core.exceptions import exception
-from pydantic import UUID4, BaseModel
-from sqlalchemy import Row, RowMapping, and_, insert, select
-from sqlalchemy.exc import IntegrityError
+from base.model import Base
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
+
+
+class FilterCondition:
+    EXACT = "exact"
+    NOT_EXACT = "not_exact"
+    GT = "gt"
+    GTE = "gte"
+    LT = "lt"
+    LTE = "gte"
+    IN = "in"
+    NOT_IN = "not_in"
+    LIKE = "like"
+    ILIKE = "ilike"
+
+    @classmethod
+    def get_by_expr(cls, expr: str = EXACT):
+        conditions_map = {
+            cls.EXACT: lambda column, value: column == value,
+            cls.NOT_EXACT: lambda column, value: column != value,
+            cls.GT: lambda column, value: column > value,
+            cls.GTE: lambda column, value: column >= value,
+            cls.LT: lambda column, value: column < value,
+            cls.LTE: lambda column, value: column <= value,
+            cls.IN: lambda column, value: column.in_(value),
+            cls.NOT_IN: lambda column, value: column.not_in(value),
+            cls.LIKE: lambda column, value: column.like(f"%{value}%"),
+            cls.ILIKE: lambda column, value: column.ilike(f"%{value}%"),
+        }
+        return conditions_map.get(expr)
+
+    @classmethod
+    def get_filter(cls, value: Any, expr: str = EXACT):
+        return {expr: value}
 
 
 class BaseRepository:
-    model = None
+    model: type[Base]
 
-    def __init__(self, session: AsyncSession, model) -> None:
+    def __init__(self, session: AsyncSession):
         self.session = session
-        self.model = model
 
-    async def get(self, obj_id: UUID4):
-        query = select(self.model).where(self.model.id == obj_id)
-        result = await self.session.execute(query)
-        obj = result.scalars().first()
-        if not obj:
-            raise exception(404, extra=str(obj_id))
-        return obj
-
-    async def create(self, obj: BaseModel):
-        stmt = insert(self.model).values(**obj.model_dump()).returning(self.model)
-        try:
-            result = await self.session.execute(stmt)
-            await self.session.commit()
-        except IntegrityError as e:
-            await self.session.rollback()
-            await self.session.close()
-            raise exception(
-                400,
-                "Ошибка создания объекта",
-                (
-                    e.args[0].split("DETAIL:  ")[-1]
-                    if "DETAIL:  " in e.args[0]
-                    else e.args[0]
-                ),
-            ) from e
-        return result.scalar_one_or_none()
-
-    async def delete(self, obj_id: UUID4) -> UUID4:
-        obj = await self.get(obj_id)
-        await self.session.delete(obj)
-        await self.session.commit()
-        return obj_id
-
-    async def fetch(
-        self,
-        filters: dict | None = None,
-        order_by: list | None = None,
-        paginate: dict | None = None,
-    ) -> Sequence[Row[Any] | RowMapping | Any]:
-        """
-        filters = {
-            "price": {"gt": 100, "lt": 200},
-            "category": "electronics",
-            "brand": {"in": ["Samsung", "Apple"]},
-            "title": {"ilike": "phone"}
-        }
-        """
-        operator_map = {
-            "gt": lambda column, value: column > value,
-            "gte": lambda column, value: column >= value,
-            "lt": lambda column, value: column < value,
-            "lte": lambda column, value: column <= value,
-            "in": lambda column, value: column.in_(value),
-            "like": lambda column, value: column.like(f"%{value}%"),
-            "ilike": lambda column, value: column.ilike(f"%{value}%"),
-        }
-        order_by = order_by or [self.model.created_at.desc()]
-        query = select(self.model)
-        if not filters:
-            result = await self.session.execute(query)
-            return result.scalars().all()
-
+    def _get_filters(self, filters: dict):
         filter_conditions = []
         for key, value in filters.items():
-            if not value:
-                continue
-            if isinstance(value, dict):
-                column = getattr(self.model, key)
-                for operator, operand in value.items():
-                    condition = operator_map.get(operator)
-                    if condition:
-                        filter_conditions.append(condition(column, operand))
-            else:
-                filter_conditions.append(getattr(self.model, key) == value)
-        query = select(self.model).filter(and_(*filter_conditions)).order_by(*order_by)
-        if paginate:
-            limit = 5 if paginate.get("limit") <= 0 else paginate.get("limit")
-            page = (
-                1 if paginate.get("current_page") <= 0 else paginate.get("current_page")
-            )
-            query = query.limit(limit).offset((page - 1) * limit)
-        result = await self.session.execute(query)
-        return result.scalars().all()
+            column = getattr(self.model, key)
+            if not isinstance(value, dict):
+                value = {FilterCondition.EXACT: value}
+            for operator, operand in value.items():
+                condition = FilterCondition.get_by_expr(operator)
+                if condition:
+                    filter_conditions.append(condition(column, operand))
+        return (
+            and_(*filter_conditions)
+            if len(filter_conditions) > 1
+            else filter_conditions[0]
+        )
 
-    async def in_(self, column: str, values: list):
-        query = select(self.model).where(getattr(self.model, column).in_(values))
-        result = await self.session.execute(query)
-        return result.scalars().all()
+    def get_statement(
+        self,
+        filters: dict[str, Any] | None = None,
+        excludes: dict[InstrumentedAttribute, Any] | None = None,
+        # select_related: list[relationship] | None = None,
+        # prefetch_related: list[relationship] | None = None,
+        order_by_: list[InstrumentedAttribute] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        count: bool = False,
+    ) -> Select:
+        statement = (
+            select(self.model)
+            if not count
+            else select(func.count()).select_from(self.model).group_by(self.model.id)
+        )
+        if filters:
+            filter_query = self._get_filters(filters)
+            statement = statement.filter(filter_query)
+        if excludes:
+            for field, value in excludes.items():
+                statement = statement.where(field != value)
+        # if select_related:
+        #     statement = statement.options(
+        #         *[joinedload(item) for item in select_related]
+        #     )
+        # if prefetch_related:
+        #     statement = statement.options(
+        #         *[selectinload(item) for item in prefetch_related]
+        #     )
+        if offset is not None:
+            statement = statement.offset(offset)
+        if limit is not None:
+            statement = statement.limit(limit)
+        order_by: list = order_by_ or [self.model.created_at.desc()]
+        statement = statement.order_by(*order_by)
+        return statement
 
-    async def update(self, obj_id: UUID4, data: BaseModel):
-        upd_data = data.dict(exclude_unset=True) if not isinstance(data, dict) else data
-        obj = await self.session.get(self.model, obj_id)
-        if not obj:
-            raise exception(400, extra=str(obj_id))
-        for field, value in upd_data.items():
-            if value is None:
-                continue
-            setattr(obj, field, value)
+    def customize_filters(self, filters: dict[str, Any]):
+        pass
+
+    async def all(
+        self,
+        # select_related: list[relationship] | None = None,
+        # prefetch_related: list[relationship] | None = None,
+        order_by: list[InstrumentedAttribute] | None = None,
+    ) -> Sequence[Base]:
+        statement = self.get_statement(
+            # select_related=select_related,
+            # prefetch_related=prefetch_related,
+            order_by_=order_by,
+        )
+        result = await self.session.scalars(statement=statement)
+        return result.all()
+
+    async def count(
+        self,
+        filters: dict[str, Any],
+        exclude_data: dict[InstrumentedAttribute, Any] | None = None,
+    ) -> int:
+        self.customize_filters(filters)
+        statement = self.get_statement(
+            filters=filters, excludes=exclude_data, count=True
+        )
+        result = await self.session.scalars(statement=statement)
+        return len(result.all())
+
+    async def exists(
+        self,
+        filters: dict[str, Any],
+        exclude_data: dict[InstrumentedAttribute, Any] | None = None,
+    ) -> bool:
+        self.customize_filters(filters)
+        subquery = self.get_statement(filters=filters, excludes=exclude_data)
+        statement = select(1).where(subquery.exists())
+        result = await self.session.scalar(statement=statement)
+        return bool(result)
+
+    async def filter(
+        self,
+        filters: dict[str, Any],
+        exclude_data: dict[InstrumentedAttribute, Any] | None = None,
+        # select_related: list[relationship] | None = None,
+        # prefetch_related: list[relationship] | None = None,
+        order_by: list[InstrumentedAttribute] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> Sequence[Base]:
+        self.customize_filters(filters)
+        statement = self.get_statement(
+            filters=filters,
+            excludes=exclude_data,
+            # select_related=select_related,
+            # prefetch_related=prefetch_related,
+            order_by_=order_by,
+            limit=limit,
+            offset=offset,
+        )
+        result = await self.session.scalars(statement=statement)
+        return result.all()
+
+    async def get(self, id: UUID) -> Base | None:
+        result = await self.session.get(self.model, id)
+        return result
+
+    async def create(self, **model_data) -> Base:
+        instance = self.model(**model_data)
+        self.session.add(instance)
         await self.session.commit()
-        return obj
+        await self.session.refresh(instance)
+        return instance
 
-    async def exists(self, obj_id: UUID4) -> bool:
-        query = select(self.model).where(self.model.id == obj_id)
-        result = await self.session.execute(query)
-        obj = result.scalars().first()
-        return obj is not None
+    async def update(self, instance: Base, **model_data) -> Base:
+        for key, value in model_data.items():
+            setattr(instance, key, value)
+        await self.session.commit()
+        await self.session.refresh(instance)
+        return instance
+
+    async def delete(self, instance: Base) -> None:
+        await self.session.delete(instance)
+        await self.session.commit()
+
+    async def get_or_create(
+        self, filters: dict[str, Any], **model_data
+    ) -> tuple[Base, bool]:
+        created = True
+        if instance := await self.filter(filters=filters):
+            if len(instance) > 1:
+                raise ValueError("Multiple instances found with the same filters")
+            created = False
+            return instance[0], created
+        model_data.update(filters)
+        return await self.create(**model_data), created
+
+    async def update_or_create(
+        self, filters: dict[str, Any], **model_data
+    ) -> tuple[Base, bool]:
+        created = True
+        if instance := await self.filter(filters=filters):
+            if len(instance) > 1:
+                raise ValueError("Multiple instances found with the same filters")
+            created = False
+            return await self.update(instance=instance[0], **model_data), created
+        model_data.update(filters)
+        return await self.create(**model_data), created

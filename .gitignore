@@ -201,6 +201,7 @@ celerybeat-schedule
 
 # Environments
 project_secrets/.test.envfile
+.envfile
 .env
 .venv
 venv/
