@@ -1,5 +1,4 @@
 import datetime
-import uuid
 
 import pytest
 
@@ -7,7 +6,6 @@ from apps.v1.interview.model import Question
 from apps.v1.interview.repository import (
     QuestionRepository,
 )
-from apps.v1.interview.schema import MessageType
 
 
 @pytest.fixture(scope="session")
@@ -92,13 +90,10 @@ async def test_update(session, questions):
         await question_repository.update(
             question,
             text="updated_question",
-            type=MessageType.QUESTION.value,
         )
         question = await question_repository.get(questions["question_to_upd"].id)
         assert question
         assert question.text == "updated_question"
-        assert question.type == MessageType.QUESTION.value
-        assert question.chat_id == questions["chat"].id
         await question_repository.update(
             question,
             text="updated_question_2",
@@ -106,8 +101,6 @@ async def test_update(session, questions):
         question = await question_repository.get(questions["question_to_upd"].id)
         assert question
         assert question.text == "updated_question_2"
-        assert question.type == MessageType.QUESTION.value
-        assert question.chat_id == questions["chat"].id
 
 
 async def test_delete(session, questions):
@@ -133,7 +126,7 @@ async def test_count(session, questions):
         question_repository = QuestionRepository(session)
         questions_count = await question_repository.count(
             {
-                "chat_id": questions["chat"].id,
+                "technology": "python",
             }
         )
         assert isinstance(questions_count, int)
@@ -143,14 +136,14 @@ async def test_count(session, questions):
 async def test_exists_true(session, questions):
     async with session:
         question_repository = QuestionRepository(session)
-        is_exists = await question_repository.exists({"chat_id": questions["chat"].id})
+        is_exists = await question_repository.exists({"technology": "python"})
         assert is_exists is True
 
 
 async def test_exists_false(session):
     async with session:
         question_repository = QuestionRepository(session)
-        is_exists = await question_repository.exists({"chat_id": uuid.uuid4()})
+        is_exists = await question_repository.exists({"technology": "xxx"})
         assert is_exists is False
 
 
@@ -162,16 +155,16 @@ async def test_filter(session, questions):
         result = await question_repository.filter(
             filters={
                 "text": {"ilike": "filter"},
-                "type": {"in": [MessageType.ANSWER.value, MessageType.QUESTION.value]},
+                "technology": {"in": ["python", "js"]},
+                "complexity": {"in": ["easy", "medium"]},
             }
         )
         assert len(result) == 3
         result = await question_repository.filter(
             filters={
                 "text": {"ilike": "filter"},
-                "type": {
-                    "in": [MessageType.ANSWER.value, MessageType.EVALUATION.value]
-                },
+                "technology": {"in": ["python", "js"]},
+                "complexity": {"in": ["easy"]},
             }
         )
         assert len(result) == 2
@@ -181,9 +174,7 @@ async def test_filter(session, questions):
                 "created_at": {
                     "between": (datetime.date(2024, 9, 2), datetime.date(2024, 9, 4))
                 },
-                "type": {
-                    "in": [MessageType.ANSWER.value, MessageType.EVALUATION.value]
-                },
+                "complexity": {"in": ["easy"]},
             }
         )
         assert len(result) == 1
@@ -193,9 +184,7 @@ async def test_filter(session, questions):
                 "created_at": {
                     "between": (datetime.date(2023, 9, 2), datetime.date(2023, 9, 4))
                 },
-                "type": {
-                    "in": [MessageType.ANSWER.value, MessageType.EVALUATION.value]
-                },
+                "complexity": {"in": ["hard"]},
             }
         )
         assert len(result) == 0
@@ -208,9 +197,9 @@ async def test_get_or_create_created(session, questions):
             filters={
                 "text": "some text",
             },
-            chat_id=questions["chat"].id,
+            technology="sql",
             text="some text",
-            type=MessageType.ANSWER.value,
+            complexity="easy",
         )
         assert created is True
 
@@ -220,10 +209,9 @@ async def test_get_or_create_not_created(session, questions):
         question_repository = QuestionRepository(session)
         obj, created = await question_repository.get_or_create(
             filters={
-                "text": "repository_test_question_question_12",
+                "text": "Question12",
             },
-            chat_id=questions["chat"].id,
-            text="repository_test_question_question_12",
+            text="Question12",
         )
         assert created is False
         assert obj.id == questions["question_to_upd2"].id
@@ -236,9 +224,9 @@ async def test_get_or_update_created(session, questions):
             filters={
                 "text": "some text 2",
             },
-            chat_id=questions["chat"].id,
+            technology="sql",
             text="some text 2",
-            type=MessageType.ANSWER.value,
+            complexity="medium",
         )
         assert created is True
 
@@ -248,10 +236,9 @@ async def test_get_or_update_not_created(session, questions):
         question_repository = QuestionRepository(session)
         obj, created = await question_repository.get_or_create(
             filters={
-                "text": "repository_test_question_question_12",
+                "text": "Question12",
             },
-            chat_id=questions["chat"].id,
-            text="repository_test_question_question_12",
+            text="Question12",
         )
         assert created is False
         assert obj.id == questions["question_to_upd2"].id
