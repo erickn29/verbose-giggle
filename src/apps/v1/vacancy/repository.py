@@ -12,34 +12,54 @@ from apps.v1.vacancy.model import (
     Vacancy,
     VacancyTool,
 )
-from repository.alchemy_orm import SQLAlchemyRepository
+from base.repository import BaseRepository
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class VacancyRepository(SQLAlchemyRepository):
+class VacancyRepository(BaseRepository):
+    model = Vacancy
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Vacancy)
+        super().__init__(
+            session,
+        )
 
 
-class ToolRepository(SQLAlchemyRepository):
+class ToolRepository(BaseRepository):
+    model = Tool
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Tool)
+        super().__init__(
+            session,
+        )
 
 
-class CityRepository(SQLAlchemyRepository):
+class CityRepository(BaseRepository):
+    model = City
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, City)
+        super().__init__(
+            session,
+        )
 
 
-class CompanyRepository(SQLAlchemyRepository):
+class CompanyRepository(BaseRepository):
+    model = Company
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Company)
+        super().__init__(
+            session,
+        )
 
 
-class VacancyToolRepository(SQLAlchemyRepository):
+class VacancyToolRepository(BaseRepository):
+    model = VacancyTool
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, VacancyTool)
+        super().__init__(
+            session,
+        )
 
     async def delete_vacancy_tools(self, vacancy_id: UUID):
         async with self.session.begin():
@@ -48,29 +68,49 @@ class VacancyToolRepository(SQLAlchemyRepository):
             await self.session.commit()
 
 
-class EmployerRepository(SQLAlchemyRepository):
+class EmployerRepository(BaseRepository):
+    model = Employer
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Employer)
+        super().__init__(
+            session,
+        )
 
 
-class EmployeeRepository(SQLAlchemyRepository):
+class EmployeeRepository(BaseRepository):
+    model = Employee
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Employee)
+        super().__init__(
+            session,
+        )
 
 
-class ResumeRepository(SQLAlchemyRepository):
+class ResumeRepository(BaseRepository):
+    model = Resume
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Resume)
+        super().__init__(
+            session,
+        )
 
 
-class JobPlaceRepository(SQLAlchemyRepository):
+class JobPlaceRepository(BaseRepository):
+    model = JobPlace
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, JobPlace)
+        super().__init__(
+            session,
+        )
 
 
-class ResumeToolRepository(SQLAlchemyRepository):
+class ResumeToolRepository(BaseRepository):
+    model = ResumeTool
+
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, ResumeTool)
+        super().__init__(
+            session,
+        )
 
     async def delete_resume_tools(self, resume_id: UUID):
         async with self.session.begin():

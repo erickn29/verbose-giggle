@@ -1,10 +1,9 @@
 from collections.abc import Sequence
-from operator import and_
 from typing import Any
 from uuid import UUID
 
-from base.model import Base
-from sqlalchemy import Select, func, select
+from base.model import Base, ModelType
+from sqlalchemy import Select, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
@@ -20,6 +19,7 @@ class FilterCondition:
     NOT_IN = "not_in"
     LIKE = "like"
     ILIKE = "ilike"
+    BETWEEN = "between"
 
     @classmethod
     def get_by_expr(cls, expr: str = EXACT):
@@ -34,6 +34,7 @@ class FilterCondition:
             cls.NOT_IN: lambda column, value: column.not_in(value),
             cls.LIKE: lambda column, value: column.like(f"%{value}%"),
             cls.ILIKE: lambda column, value: column.ilike(f"%{value}%"),
+            cls.BETWEEN: lambda column, value: column.between(*value),
         }
         return conditions_map.get(expr)
 
@@ -43,7 +44,7 @@ class FilterCondition:
 
 
 class BaseRepository:
-    model: type[Base]
+    model: type[ModelType]
 
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -56,7 +57,7 @@ class BaseRepository:
                 value = {FilterCondition.EXACT: value}
             for operator, operand in value.items():
                 condition = FilterCondition.get_by_expr(operator)
-                if condition:
+                if condition and operand:
                     filter_conditions.append(condition(column, operand))
         return (
             and_(*filter_conditions)
@@ -110,7 +111,7 @@ class BaseRepository:
         # select_related: list[relationship] | None = None,
         # prefetch_related: list[relationship] | None = None,
         order_by: list[InstrumentedAttribute] | None = None,
-    ) -> Sequence[Base]:
+    ) -> Sequence[ModelType]:
         statement = self.get_statement(
             # select_related=select_related,
             # prefetch_related=prefetch_related,
@@ -151,7 +152,7 @@ class BaseRepository:
         order_by: list[InstrumentedAttribute] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> Sequence[Base]:
+    ) -> Sequence[ModelType]:
         self.customize_filters(filters)
         statement = self.get_statement(
             filters=filters,
@@ -165,22 +166,20 @@ class BaseRepository:
         result = await self.session.scalars(statement=statement)
         return result.all()
 
-    async def get(self, id: UUID) -> Base | None:
-        result = await self.session.get(self.model, id)
+    async def get(self, id: UUID) -> ModelType | None:
+        result: ModelType | None = await self.session.get(self.model, id)
         return result
 
-    async def create(self, **model_data) -> Base:
-        instance = self.model(**model_data)
+    async def create(self, **model_data) -> ModelType:
+        instance: ModelType = self.model(**model_data)
         self.session.add(instance)
         await self.session.commit()
-        await self.session.refresh(instance)
         return instance
 
-    async def update(self, instance: Base, **model_data) -> Base:
+    async def update(self, instance: ModelType, **model_data) -> ModelType:
         for key, value in model_data.items():
             setattr(instance, key, value)
         await self.session.commit()
-        await self.session.refresh(instance)
         return instance
 
     async def delete(self, instance: Base) -> None:
@@ -189,7 +188,7 @@ class BaseRepository:
 
     async def get_or_create(
         self, filters: dict[str, Any], **model_data
-    ) -> tuple[Base, bool]:
+    ) -> tuple[ModelType, bool]:
         created = True
         if instance := await self.filter(filters=filters):
             if len(instance) > 1:
@@ -201,7 +200,7 @@ class BaseRepository:
 
     async def update_or_create(
         self, filters: dict[str, Any], **model_data
-    ) -> tuple[Base, bool]:
+    ) -> tuple[ModelType, bool]:
         created = True
         if instance := await self.filter(filters=filters):
             if len(instance) > 1:

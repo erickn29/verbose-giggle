@@ -2,33 +2,32 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from src.base.model import Base
-
+from base.model import Base, ModelType
 from base.repository import BaseRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 
 class BaseService:
-    def __init__(self, session: AsyncSession, repository: BaseRepository):
+    def __init__(self, session: AsyncSession, repository: type[BaseRepository]):
         self.session = session
         self.repository = repository(session=session)
 
-    async def create(self, **model_data) -> Base:
+    async def create(self, **model_data) -> ModelType:
         return await self.repository.create(**model_data)
 
-    async def get(self, id: UUID) -> Base:
+    async def get(self, id: UUID) -> ModelType | None:
         return await self.repository.get(id)
 
     async def delete(self, instance: Base) -> None:
         return await self.repository.delete(instance)
 
-    async def update(self, instance: Base, **model_data) -> Base:
+    async def update(self, instance: Base, **model_data) -> ModelType:
         return await self.repository.update(instance, **model_data)
 
     async def all(
         self, order_by: list[InstrumentedAttribute] | None = None
-    ) -> Sequence[Base]:
+    ) -> Sequence[ModelType]:
         return await self.repository.all(order_by)
 
     async def filter(
@@ -38,19 +37,23 @@ class BaseService:
         order_by: list[InstrumentedAttribute] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> Sequence[Base]:
+    ) -> Sequence[ModelType]:
         return await self.repository.filter(
-            filters,
-            order_by,
-            exclude_data,
-            limit,
-            offset,
+            filters=filters,
+            order_by=order_by,
+            exclude_data=exclude_data,
+            limit=limit,
+            offset=offset,
         )
 
-    async def get_or_create(self, filters: dict[str, Any], **model_data) -> Base:
+    async def get_or_create(
+        self, filters: dict[str, Any], **model_data
+    ) -> tuple[ModelType, bool]:
         return await self.repository.get_or_create(filters, **model_data)
 
-    async def update_or_create(self, filters: dict[str, Any], **model_data) -> Base:
+    async def update_or_create(
+        self, filters: dict[str, Any], **model_data
+    ) -> tuple[ModelType, bool]:
         return await self.repository.update_or_create(filters, **model_data)
 
     async def exists(

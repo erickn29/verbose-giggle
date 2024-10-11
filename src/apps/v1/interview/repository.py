@@ -1,28 +1,33 @@
 from apps.v1.interview.model import Answer, Chat, Evaluation, Message, Question
-from repository.alchemy_orm import SQLAlchemyRepository
+from base.repository import BaseRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class ChatRepository(SQLAlchemyRepository):
+class ChatRepository(BaseRepository):
+    model = Chat
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Chat)
+        super().__init__(session)
 
 
-class QuestionRepository(SQLAlchemyRepository):
+class QuestionRepository(BaseRepository):
+    model = Question
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Question)
+        super().__init__(session)
 
 
-class AnswerRepository(SQLAlchemyRepository):
+class AnswerRepository(BaseRepository):
+    model = Answer
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Answer)
+        super().__init__(session)
         
         
-class EvaluationRepository(SQLAlchemyRepository):
+class EvaluationRepository(BaseRepository):
+    model = Evaluation
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Evaluation)
+        super().__init__(session)
 
 
-class MessageRepository(SQLAlchemyRepository):
+class MessageRepository(BaseRepository):
+    model = Message
     def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session, Message)
+        super().__init__(session)

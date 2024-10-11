@@ -1,7 +1,7 @@
 import uuid
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, TypeVar
 
 from core.settings import settings
 from sqlalchemy import UUID, MetaData
@@ -35,3 +35,6 @@ class Base(DeclarativeBase):
     id: Mapped[uuid_pk]
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+    
+    
+ModelType = TypeVar('ModelType', bound=Base)

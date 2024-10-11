@@ -2,7 +2,7 @@ import random
 
 from uuid import UUID
 
-from apps.v1.interview.model import Answer, Chat
+from apps.v1.interview.model import Answer, Chat, Question
 from apps.v1.interview.repository import (
     AnswerRepository,
     ChatRepository,
@@ -18,6 +18,7 @@ from apps.v1.interview.schema import (
     MessageType,
 )
 from apps.v1.interview.utils.request import get_evaluation
+from apps.v1.user.model import User
 from apps.v1.user.service import UserService
 from base.service import BaseService
 from core.settings import settings
@@ -34,14 +35,20 @@ class QuestionService(BaseService):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, repository=QuestionRepository)
 
-    async def get_question(self, chat_id: UUID, user_schema: UserModelSchema) -> str:
+    async def get_question(
+        self, chat_id: UUID, user_schema: UserModelSchema
+    ) -> Question:
         chat_service = ChatService(self.session)
         user_service = UserService(self.session)
 
-        user = await user_service.get(user_schema.id)
-        chat = await chat_service.get(chat_id)
+        if not isinstance(user_schema.id, UUID):
+            user_schema.id = UUID(user_schema.id)
+        user: User | None = await user_service.get(user_schema.id)
+        chat: Chat | None = await chat_service.get(chat_id)
+        if not user or not chat:
+            raise Exception(404, "Чат или пользователь не найдены")
         used_question_ids = [answer.question_id for answer in user.answers]
-        questions_by_chat_config = await self.fetch(
+        questions_by_chat_config = await self.filter(
             {
                 "technology": {
                     "in": [t.get("technology") for t in chat.config["technologies"]]
@@ -53,8 +60,8 @@ class QuestionService(BaseService):
             }
         )
         if not questions_by_chat_config:
-            questions = await self.fetch(
-                {
+            questions = await self.filter(
+                filters={
                     "technology": {
                         "in": [t.get("technology") for t in chat.config["technologies"]]
                     },
@@ -62,28 +69,30 @@ class QuestionService(BaseService):
                         "in": [t.get("complexity") for t in chat.config["technologies"]]
                     },
                 },
-                ["created_at", ]
+                order_by=[
+                    "created_at",
+                ],  # TODO: решить проблему
             )
-            question = questions[0]
+            question: Question = questions[0]
             message_service = MessageService(self.session)
             await message_service.create(
-                MessageCreateInputSchema(
+                **MessageCreateInputSchema(
                     chat_id=chat_id,
                     text=question.text,
                     type=MessageType.QUESTION.value,
                     question_id=question.id,
-                )
+                ).model_dump()
             )
             return question
         question = random.choice(questions_by_chat_config)
         message_service = MessageService(self.session)
         await message_service.create(
-            MessageCreateInputSchema(
+            **MessageCreateInputSchema(
                 chat_id=chat_id,
                 text=question.text,
                 type=MessageType.QUESTION.value,
                 question_id=question.id,
-            )
+            ).model_dump()
         )
         return question
 
@@ -101,17 +110,21 @@ class AnswerService(BaseService):
         chat_service = ChatService(self.session)
         message_service = MessageService(self.session)
         evaluation_service = EvaluationService(self.session)
-        schema.user_id = user_schema.id
+        schema.user_id = (
+            user_schema.id if isinstance(user_schema.id, UUID) else UUID(user_schema.id)
+        )
 
         chat = await chat_service.get(chat_id)
-        answer = await self.create(schema)
+        if not chat:
+            raise Exception(404, "Чат не найден")
+        answer = await self.create(**schema.model_dump())
         await message_service.create(
-            MessageCreateInputSchema(
+            **MessageCreateInputSchema(
                 chat_id=chat.id,
                 text=answer.text,
                 type=MessageType.ANSWER.value,
                 answer_id=answer.id,
-            )
+            ).model_dump()
         )
         await evaluation_service.get_evaluation(chat, answer)
         return answer
@@ -162,26 +175,28 @@ class EvaluationService(BaseService):
             or not response["choices"][0]["message"].get("content")
         ):
             await message_service.create(
-                MessageCreateInputSchema(
+                **MessageCreateInputSchema(
                     chat_id=chat.id,
                     text=default_text,
                     type=MessageType.EVALUATION.value,
-                )
+                ).model_dump()
             )
             return
         evaluation_text = (
             response["choices"][0]["message"]["content"].strip().replace("\n", "<br>")
         )
         evaluation = await self.create(
-            EvaluationInputSchema(answer_id=answer.id, text=evaluation_text)
+            **EvaluationInputSchema(
+                answer_id=answer.id, text=evaluation_text
+            ).model_dump()
         )
         await message_service.create(
-            MessageCreateInputSchema(
+            **MessageCreateInputSchema(
                 chat_id=chat.id,
                 text=evaluation_text,
                 type=MessageType.EVALUATION.value,
                 evaluation_id=evaluation.id,
-            )
+            ).model_dump()
         )
         if "Оценка: " in evaluation_text and "/10" in evaluation_text:
             eval_string = evaluation_text.split("/10")[0]
@@ -189,7 +204,8 @@ class EvaluationService(BaseService):
             if eval_num.isdigit():
                 answer_service = AnswerService(session=self.session)
                 await answer_service.update(
-                    answer.id, AnswerUpdateInputSchema(score=int(eval_num))
+                    answer,
+                    **AnswerUpdateInputSchema(score=int(eval_num)).model_dump(),
                 )
                 return
         return
