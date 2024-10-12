@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from apps.v1.auth.schema import PasswordRecoveryEmail
 from apps.v1.auth.service import RecoveryTokenService
@@ -30,7 +31,7 @@ async def create_user(
 ):
     user_service = UserService(session=session)
     recovery_service = RecoveryTokenService(session=session)
-    user = await user_service.create(schema)
+    user = await user_service.create(**schema.model_dump())
     msg = f"Confirm email\n" f"{settings.app.FRONT_URL}/verify-email/"
     await recovery_service.send_token(
         user=user,
@@ -53,10 +54,12 @@ async def verify_email(
     recovery_service = RecoveryTokenService(session=session)
     if token := await recovery_service.get_obj_or_400({"token": schema.token}):
         status = True
-    user = await user_service.fetch({"id": token.user_id})
+    user = await user_service.filter({"id": token.user_id})
     if len(user) != 1:
         raise exception(404, extra=str(token.user_id))
-    await user_service.update(user[0].id, UserUpdateVerifyData(is_verified=True))
+    await user_service.update(
+        user[0], **UserUpdateVerifyData(is_verified=True).model_dump()
+    )
     return EmailVerifyOutputSchema(status=status)
 
 
@@ -67,7 +70,10 @@ async def update_user(
     user: Annotated[UserModelSchema, Depends(is_authenticated)],
 ):
     user_service = UserService(session=session)
-    return await user_service.update(user.id, schema)
+    user_id = user.id if isinstance(user.id, UUID) else UUID(user.id)
+    if user_obj := await user_service.get(user_id):
+        return await user_service.update(user_obj, **schema.model_dump())
+    raise exception(404, extra=str(user.id))
 
 
 @router.get("/me/", response_model=UserOutputSchema)

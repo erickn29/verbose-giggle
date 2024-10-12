@@ -12,9 +12,9 @@ from core.settings import settings
 from fastapi import Depends
 from jwt import DecodeError, ExpiredSignatureError
 from pydantic import BaseModel
+from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
-from schemas.user import UserModelSchema
 from utils.cache import cache
 
 
@@ -74,7 +74,7 @@ class JWTAuthenticationBackend:
         token_data = Token(token_type=settings.auth.TOKEN_TYPE)
         if not user:
             raise exception(
-                400,
+                401,
                 msg="Ошибка аутентификации",
                 extra="Некорректные имя пользователя или пароль",
             )
@@ -102,7 +102,7 @@ class JWTAuthenticationBackend:
         user = await self._get_user_from_db("email", email)
         if not self.user_service.verify_password(password, user.password):
             raise exception(
-                400,
+                401,
                 msg="Ошибка аутентификации",
                 extra="Некорректные имя пользователя или пароль",
             )
@@ -125,7 +125,7 @@ class JWTAuthenticationBackend:
 
     async def _get_user_from_db(self, field_name: str, field_value: str) -> User:
         """Метод возвращает объект пользователя из БД"""
-        user_list = await self.user_service.fetch({field_name: field_value})
+        user_list = await self.user_service.filter({field_name: field_value})
         if len(user_list) != 1:
             raise exception(401, extra="Некорректные имя пользователя или пароль")
         return user_list[0]
@@ -143,34 +143,33 @@ class JWTAuthenticationBackend:
             raise exception(401)
         if user_schema := await cache.get_user(user_id):
             return user_schema
-        token_data = TokenData(id=user_id)
-        user = await self._get_user_from_db("id", token_data.id)
-        if str(user.id) != token_data.id:
+        # token_data = TokenData(id=user_id)
+        user = await self._get_user_from_db("id", user_id)
+        if str(user.id) != user_id:
             raise exception(401)
         user_schema = UserModelSchema(
-                id=user.id,
-                email=user.email,
-                password=user.password,
-                is_active=user.is_active,
-                is_admin=user.is_admin,
-                is_verified=user.is_verified,
-                coin=user.coin,
-                subscription=user.subscription,
-                created_at=user.created_at,
-                updated_at=user.updated_at,
-            )
+            id=user.id,
+            email=user.email,
+            password=user.password,
+            is_active=user.is_active,
+            is_admin=user.is_admin,
+            is_verified=user.is_verified,
+            coin=user.coin,
+            subscription=user.subscription,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+        )
         await cache.set_user(user_schema)
         return user_schema
 
     async def _check_user_is_active(self) -> UserModelSchema:
         """Проверяет статус пользователя"""
-        current_user = await self._get_current_user(
-            await settings.auth.OAUTH2_SCHEME(self.request)
-        )
+        token = await settings.auth.OAUTH2_SCHEME(self.request)
+        if not token:
+            raise exception(401, extra="Заголовок авторизации отсутствует")
+        current_user = await self._get_current_user(token)
         if not current_user.is_active:
-            raise exception(
-                400, msg="Ошибка авторизации", extra="Пользователь неактивен"
-            )
+            raise exception(401, extra="Пользователь неактивен")
         return current_user
 
 

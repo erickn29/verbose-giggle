@@ -7,12 +7,10 @@ from apps.v1.auth.schema import (
     PasswordRecoveryData,
     PasswordRecoveryEmail,
     RecoveryTokenInputSchema,
-    User,
     UserPassword,
 )
-from apps.v1.auth.service import RecoveryTokenService, RecoveryTokenUpdate
+from apps.v1.auth.service import RecoveryTokenService
 from apps.v1.auth.utils.auth import JWTAuthenticationBackend as auth
-from apps.v1.auth.utils.auth import is_authenticated
 from apps.v1.user.schema import UserCreateInputSchema
 from apps.v1.user.service import UserService
 from core.database import db_conn
@@ -48,13 +46,6 @@ async def get_new_tokens(
     return await auth(session=session).get_token(token.token)
 
 
-@router.get("/user/my/", response_model=User)
-async def read_user_my(
-    user: User = Depends(is_authenticated),  # noqa: B008
-):
-    return user
-
-
 @router.post("/password-reset/")
 async def password_reset_request(
     email: PasswordRecoveryEmail,
@@ -66,14 +57,14 @@ async def password_reset_request(
     user_service = UserService(session=session)
     recovery_service = RecoveryTokenService(session=session)
     status = False
-    if user := await user_service.fetch({"email": email.email}):
+    if user := await user_service.filter({"email": email.email}):
         token = uuid.uuid4().hex
         recovery_token = RecoveryTokenInputSchema(token=token, user_id=user[0].id)
         message = (
             f"Перейдите по ссылке для восстановления пароля\n"
             f"https://{settings.app.FRONT_URL}/password-recovery?token={token}"
         )
-        status = await recovery_service.create(recovery_token)
+        _, status = await recovery_service.create(**recovery_token.model_dump())
         Mail().send_email(email.email, message)
 
     return {"status": status}
@@ -90,11 +81,11 @@ async def password_recovery(
     user_service = UserService(session=session)
     recovery_service = RecoveryTokenService(session=session)
     token = await recovery_service.get_obj_or_400({"token": data.token})
-    user = await user_service.fetch({"id": token.user_id})
+    user = await user_service.filter({"id": token.user_id})
     if len(user) != 1:
         raise exception(404, extra=str(token.user_id))
 
     user_base = UserPassword(password=data.password)
-    status = await user_service.update(user[0].id, user_base) is not None
-    await recovery_service.update(token.id, RecoveryTokenUpdate(is_used=True))
+    status = await user_service.update(user[0], **user_base.model_dump()) is not None
+    await recovery_service.update(token, is_used=True)
     return {"status": status}

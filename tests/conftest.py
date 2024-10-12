@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
+from apps.v1.user.service import UserService
 from base.model import Base
 from core.database import db_conn
 from core.settings import settings
@@ -96,15 +97,22 @@ async def client(session) -> AsyncGenerator[AsyncClient, None]:
 #     return {"Authorization": f"Bearer {response.json()['access_token']}"}
 
 
-# @pytest_asyncio.fixture(scope="session")
-# async def auth_headers(client, session):
-#     UserFactory._meta.sqlalchemy_session = session
-#     user: SQLAlchemyModelFactory = await UserFactory(role=UserRole.user.value)
+@pytest_asyncio.fixture(scope="session")
+async def auth_headers(client, session):
+    user_service = UserService(session)
+    user = await user_service.create(
+        email="user_base@example.com",
+        password="test_password",
+    )
+    data = {
+        "email": user.email,
+        "password": "test_password",
+    }
 
-#     data = {
-#         "username": user.email,
-#         "password": "password",
-#     }
-
-#     response = await client.post("/api/v1/auth/login/", data=data)
-#     return {"Authorization": f"Bearer {response.json()['access_token']}"}
+    response = await client.post("/api/v1/auth/login/", json=data)
+    return {
+        "refresh_token": response.json()["refresh_token"],
+        "access_token": response.json()["access_token"],
+        "auth_headers": {"Authorization": f"Bearer {response.json()['access_token']}"},
+        "user": user,
+    }

@@ -45,8 +45,8 @@ class UserAdmin(ModelView, model=User):
                 model.id,
                 UpdateUserPassword(password=data.get("password")),
             )
-            
-            
+
+
 class ChatAdmin(ModelView, model=Chat):
     page_size = 50
     page_size_options = [25, 50, 100, 200]
@@ -64,8 +64,8 @@ class ChatAdmin(ModelView, model=Chat):
     name = "Чат"
     name_plural = "Чаты"
     icon = "fa-solid fa-comment"
-    
-    
+
+
 class MessageAdmin(ModelView, model=Message):
     page_size = 50
     page_size_options = [25, 50, 100, 200]
@@ -126,8 +126,8 @@ class AnswerAdmin(ModelView, model=Answer):
     name = "Ответ"
     name_plural = "Ответы"
     icon = "fa-solid fa-lightbulb"
-    
-    
+
+
 class EvaluationAdmin(ModelView, model=Evaluation):
     page_size = 50
     page_size_options = [25, 50, 100, 200]
@@ -140,7 +140,9 @@ class EvaluationAdmin(ModelView, model=Evaluation):
         Evaluation.created_at,
     ]
     column_searchable_list = [Evaluation.text]
-    column_labels = {k: v.doc for k, v in Evaluation.__mapper__.columns.items() if v.doc}
+    column_labels = {
+        k: v.doc for k, v in Evaluation.__mapper__.columns.items() if v.doc
+    }
     name = "Ответ модели"
     name_plural = "Ответы модели"
     icon = "fa-solid fa-brain"

@@ -36,40 +36,39 @@ class Answer(Base):
     question = relationship("Question", back_populates="answers", lazy="selectin")
     user = relationship("User", back_populates="answers", lazy="joined")
     evaluations = relationship("Evaluation", back_populates="answer", lazy="selectin")
-    
-    
+
+
 class Evaluation(Base):
     __tablename__ = "evaluation"
-    
+
     answer_id: Mapped[UUID] = mapped_column(
         ForeignKey("answer.id", ondelete="CASCADE"),
         doc="ID ответа",
     )
     text: Mapped[str] = mapped_column(Text, doc="Текст ответа модели")
-    
+
     answer = relationship("Answer", back_populates="evaluations", lazy="joined")
-    
-    
+
+
 class Chat(Base):
     __tablename__ = "chat"
-    
+
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"),
         doc="Пользователь",
     )
     title: Mapped[str] = mapped_column(Text, doc="Название чата")
     config: Mapped[dict] = mapped_column(JSON, doc="Конфигурация")
-    
+
     user = relationship("User", back_populates="chats", lazy="joined")
     messages = relationship("Message", back_populates="chat", lazy="selectin")
-    
-    
+
+
 class Message(Base):
     __tablename__ = "message"
-    
+
     chat_id: Mapped[UUID] = mapped_column(
-        ForeignKey("chat.id", ondelete="CASCADE"),
-        doc="Сообщение"
+        ForeignKey("chat.id", ondelete="CASCADE"), doc="Сообщение"
     )
     text: Mapped[str] = mapped_column(Text, doc="Текст сообщения")
     type: Mapped[str] = mapped_column(String, doc="Тип сообщения")
@@ -88,5 +87,5 @@ class Message(Base):
         doc="ID оценки",
         nullable=True,
     )
-    
+
     chat = relationship("Chat", back_populates="messages", lazy="joined")

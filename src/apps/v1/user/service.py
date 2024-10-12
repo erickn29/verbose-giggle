@@ -1,17 +1,10 @@
-from collections.abc import Sequence
-from typing import Any
-from uuid import UUID
-
 from apps.v1.user.model import User
 from apps.v1.user.repository import UserRepository
 from apps.v1.user.schema import (
-    UserCreateInputSchema,
     UserUpdateData,
-    UserUpdateVerifyData,
 )
 from base.service import BaseService
 from core.settings import settings
-from sqlalchemy import Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -22,31 +15,15 @@ class UserService(BaseService):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, UserRepository)
 
-    async def get(self, user_id: UUID) -> User | None:
-        return await self.repository.get(user_id)
+    async def create(self, **data) -> User:
+        if data.get("password"):
+            data["password"] = self.get_password_hash(data["password"])
+        return await self.repository.create(**data)
 
-    async def create(self, data: UserCreateInputSchema) -> User:
-        if data.password:
-            data.password = self.get_password_hash(data.password)
-        return await self.repository.create(data)
-
-    async def delete(self, user_id: UUID) -> UUID:
-        return await self.repository.delete(user_id)
-
-    async def update(
-        self, user_id: UUID, data: UserUpdateData | UserUpdateVerifyData
-    ) -> User:
+    async def update(self, user: User, **data) -> User:
         if isinstance(data, UserUpdateData) and data.password:
             data.password = self.get_password_hash(data.password)
-        return await self.repository.update(user_id, data)
-
-    async def fetch(
-        self, filters: dict | None = None
-    ) -> Sequence[Row[Any] | RowMapping | Any]:
-        return await self.repository.fetch(filters)
-
-    async def exists(self, user_id: UUID) -> bool:
-        return await self.repository.exists(user_id)
+        return await self.repository.update(user, **data)
 
     @staticmethod
     def verify_password(plain_password, hashed_password) -> bool:

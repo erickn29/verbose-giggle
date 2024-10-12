@@ -40,13 +40,13 @@ class Cache:
 
     async def set_user(self, schema: UserModelSchema):
         schema.id = str(schema.id)
-        schema.created_at = schema.created_at.strftime('%Y-%m-%d %H:%M:%S')
-        schema.updated_at = schema.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        schema.created_at = schema.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        schema.updated_at = schema.updated_at.strftime("%Y-%m-%d %H:%M:%S")
         schema_string = json.dumps(schema.model_dump())
         await self.set(
             f"user:{str(schema.id)}",
             schema_string,
-            settings.auth.ACCESS_TOKEN_EXPIRE - 10
+            settings.auth.ACCESS_TOKEN_EXPIRE - 10,
         )
 
     async def get_user(self, id: str) -> UserModelSchema | None:
@@ -55,12 +55,12 @@ class Cache:
             schema = UserModelSchema.model_validate(json.loads(res))
             schema.id = UUID(schema.id)
             schema.created_at = datetime.datetime.strptime(
-                schema.created_at, 
-                '%Y-%m-%d %H:%M:%S',
+                schema.created_at,
+                "%Y-%m-%d %H:%M:%S",
             )
             schema.updated_at = datetime.datetime.strptime(
-                schema.updated_at, 
-                '%Y-%m-%d %H:%M:%S',
+                schema.updated_at,
+                "%Y-%m-%d %H:%M:%S",
             )
             return UserModelSchema.model_validate(schema)
         return None

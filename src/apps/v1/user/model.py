@@ -11,7 +11,7 @@ class User(Base):
     __tablename__ = "user"
 
     email: Mapped[str] = mapped_column(
-        String(32), doc="Электронная почта", unique=True, nullable=False
+        String(256), doc="Электронная почта", unique=True, nullable=False
     )
     password: Mapped[str] = mapped_column(String(512), doc="Пароль", nullable=False)
     is_active: Mapped[bool] = mapped_column(doc="Активен", default=True)

@@ -35,6 +35,6 @@ class Base(DeclarativeBase):
     id: Mapped[uuid_pk]
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
-    
-    
-ModelType = TypeVar('ModelType', bound=Base)
+
+
+ModelType = TypeVar("ModelType", bound=Base)

@@ -17,4 +17,4 @@ class RecoveryTokenRepository(BaseRepository):
             Depends(db_conn.get_session),
         ],
     ) -> None:
-        super().__init__(session=session, model=RecoveryToken)
+        super().__init__(session=session)
