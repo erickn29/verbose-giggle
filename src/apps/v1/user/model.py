@@ -26,7 +26,14 @@ class User(Base):
     chats: Mapped[list[Chat]] = relationship(
         "Chat", back_populates="user", lazy="selectin"
     )
-    answers = relationship("Answer", back_populates="user", lazy="selectin")
+    answers = relationship(
+        "Answer", 
+        back_populates="user", 
+        lazy="selectin",
+        order_by="Answer.created_at",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
     employee = relationship(
         "Employee",
         back_populates="user",

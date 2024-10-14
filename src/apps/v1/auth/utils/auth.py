@@ -184,3 +184,9 @@ async def is_authenticated(
     auth: JWTAuthenticationBackend = Depends(get_jwt_auth_backend),
 ) -> UserModelSchema:
     return await auth(request)
+
+
+async def is_verified_email(user: UserModelSchema = Depends(is_authenticated)):
+    if not user.is_verified:
+        raise exception(403, "Необходимо подтвердить email")
+    return user

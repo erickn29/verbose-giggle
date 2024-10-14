@@ -21,6 +21,7 @@ from apps.v1.interview.utils.request import get_evaluation
 from apps.v1.user.model import User
 from apps.v1.user.service import UserService
 from base.service import BaseService
+from core.exceptions import exception
 from core.settings import settings
 from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,19 +61,17 @@ class QuestionService(BaseService):
             }
         )
         if not questions_by_chat_config:
-            questions = await self.filter(
-                filters={
-                    "technology": {
-                        "in": [t.get("technology") for t in chat.config["technologies"]]
-                    },
-                    "complexity": {
-                        "in": [t.get("complexity") for t in chat.config["technologies"]]
-                    },
-                },
-                order_by=[
-                    "created_at",
-                ],  # TODO: решить проблему
-            )
+            questions: list[Question] = []
+            for answer in user.answers:
+                question = await self.get(answer.question_id) # type: ignore
+                if not question:
+                    continue
+                if question in questions:
+                    questions.pop(questions.index(question))
+                    continue
+                questions.append(question)
+            if not questions:
+                raise exception(404, "Нет вопросов для данной конфигурации чата")
             question: Question = questions[0]
             message_service = MessageService(self.session)
             await message_service.create(

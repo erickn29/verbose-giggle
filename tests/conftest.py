@@ -63,7 +63,7 @@ async def session(engine) -> AsyncGenerator[AsyncSession, None]:
 
     session_test = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    async with session_test() as test_session:
+    async with session_test() as test_session:  # type: ignore
         yield test_session
         # await test_session.close()
 
@@ -99,6 +99,7 @@ async def client(session) -> AsyncGenerator[AsyncClient, None]:
 
 @pytest_asyncio.fixture(scope="session")
 async def auth_headers(client, session):
+    returned_data = {}
     user_service = UserService(session)
     user = await user_service.create(
         email="user_base@example.com",
@@ -107,12 +108,57 @@ async def auth_headers(client, session):
     data = {
         "email": user.email,
         "password": "test_password",
+        "is_verified": True,
+    }
+    await user_service.update(user, is_verified=True)
+
+    response = await client.post("/api/v1/auth/login/", json=data)
+    returned_data.update(
+        {
+            "refresh_token": response.json()["refresh_token"],
+            "access_token": response.json()["access_token"],
+            "auth_headers": {
+                "Authorization": f"Bearer {response.json()['access_token']}"
+            },
+            "user": user,
+        }
+    )
+    user2 = await user_service.create(
+        email="user_base2@example.com",
+        password="test_password",
+    )
+    data = {
+        "email": user2.email,
+        "password": "test_password",
+        "is_verified": True,
+    }
+    await user_service.update(user2, is_verified=True)
+
+    response = await client.post("/api/v1/auth/login/", json=data)
+    returned_data.update(
+        {
+            "auth_headers2": {
+                "Authorization": f"Bearer {response.json()['access_token']}"
+            },
+            "user2": user2,
+        }
+    )
+    user3 = await user_service.create(
+        email="user_base3@example.com",
+        password="test_password",
+    )
+    data = {
+        "email": user3.email,
+        "password": "test_password",
     }
 
     response = await client.post("/api/v1/auth/login/", json=data)
-    return {
-        "refresh_token": response.json()["refresh_token"],
-        "access_token": response.json()["access_token"],
-        "auth_headers": {"Authorization": f"Bearer {response.json()['access_token']}"},
-        "user": user,
-    }
+    returned_data.update(
+        {
+            "auth_headers3": {
+                "Authorization": f"Bearer {response.json()['access_token']}"
+            },
+            "user3": user3,
+        }
+    )
+    return returned_data

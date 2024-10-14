@@ -61,7 +61,13 @@ class Chat(Base):
     config: Mapped[dict] = mapped_column(JSON, doc="Конфигурация")
 
     user = relationship("User", back_populates="chats", lazy="joined")
-    messages = relationship("Message", back_populates="chat", lazy="selectin")
+    messages: Mapped[list["Message"]] = relationship(
+        "Message", 
+        back_populates="chat", 
+        lazy="joined",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class Message(Base):

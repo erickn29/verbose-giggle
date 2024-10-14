@@ -4,12 +4,26 @@ import pytest
 
 from apps.v1.interview.model import Question
 from apps.v1.interview.service import (
+    AnswerService,
+    ChatService,
     QuestionService,
 )
+from schemas.user import UserModelSchema
 
 
 @pytest.fixture(scope="session")
-async def questions(session):
+async def questions(session, auth_headers):
+    chat_service = ChatService(session)
+    chat = await chat_service.create(
+        user_id=auth_headers["user"].id,
+        title=f"chat_{auth_headers["user"].email}",
+        config={
+            "technologies": [
+                {"technology": "php", "complexity": "easy"},
+                {"technology": "vue", "complexity": "medium"},
+            ]
+        },
+    )
     question_service = QuestionService(session)
     question_to_upd = await question_service.create(
         text="Question1",
@@ -45,11 +59,154 @@ async def questions(session):
         created_at=datetime.date(2024, 9, 5),
     )
 
+    q1 = await question_service.create(
+        technology="php",
+        text="test_q1",
+        complexity="easy",
+        created_at=datetime.date(2024, 9, 1),
+    )
+    q2 = await question_service.create(
+        technology="vue",
+        text="test_q2",
+        complexity="medium",
+        created_at=datetime.date(2024, 9, 3),
+    )
+    q3 = await question_service.create(
+        technology="php",
+        text="test_q3",
+        complexity="easy",
+        created_at=datetime.date(2024, 9, 5),
+    )
+    await question_service.create(
+        technology="go",
+        text="test_q4",
+        complexity="easy",
+        created_at=datetime.date(2024, 9, 5),
+    )
+    await question_service.create(
+        technology="angular",
+        text="test_q5",
+        complexity="easy",
+        created_at=datetime.date(2024, 9, 5),
+    )
+
     return {
         "question_to_upd": question_to_upd,
         "question_to_upd2": question_to_upd2,
         "question_to_del": question_to_del,
+        "chat": chat,
+        "q1": q1,
+        "q2": q2,
+        "q3": q3,
     }
+
+
+async def test_get_question(session, questions, auth_headers):
+    async with session:
+        question_service = QuestionService(session)
+        question_1 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+    assert isinstance(question_1, Question)
+    assert question_1.id in [questions["q1"].id, questions["q2"].id, questions["q3"].id]
+
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_1",
+            score=5,
+            question_id=question_1.id,
+            user_id=auth_headers["user"].id,
+        )
+    async with session:
+        question_service = QuestionService(session)
+        question_2 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+    assert isinstance(question_2, Question)
+    assert question_2.id in [questions["q1"].id, questions["q2"].id, questions["q3"].id]
+
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_2",
+            score=5,
+            question_id=question_2.id,
+            user_id=auth_headers["user"].id,
+        )
+
+    assert question_1.text != question_2.text
+
+    async with session:
+        question_service = QuestionService(session)
+        question_3 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+    assert isinstance(question_3, Question)
+    assert question_3.id in [questions["q1"].id, questions["q2"].id, questions["q3"].id]
+
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_3",
+            score=5,
+            question_id=question_3.id,
+            user_id=auth_headers["user"].id,
+        )
+
+    assert question_1.text != question_2.text != question_3.text
+
+    async with session:
+        question_service = QuestionService(session)
+        question_4 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+        
+    assert isinstance(question_4, Question)
+    assert question_4.id == question_1.id
+        
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_3",
+            score=5,
+            question_id=question_4.id,
+            user_id=auth_headers["user"].id,
+        )
+    
+    async with session:
+        question_service = QuestionService(session)
+        question_5 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+    assert isinstance(question_5, Question)
+    assert question_5.id == question_2.id
+    
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_3",
+            score=5,
+            question_id=question_5.id,
+            user_id=auth_headers["user"].id,
+        )
+    
+    async with session:
+        question_service = QuestionService(session)
+        question_6 = await question_service.get_question(
+            questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
+        )
+    assert isinstance(question_6, Question)
+    assert question_6.id == question_3.id
+    
+    async with session:
+        answer_service = AnswerService(session)
+        await answer_service.create(
+            text="answer_3",
+            score=5,
+            question_id=question_6.id,
+            user_id=auth_headers["user"].id,
+        )
 
 
 async def test_get(session, questions):

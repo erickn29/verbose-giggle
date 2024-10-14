@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from apps.v1.auth.utils.auth import is_authenticated
+from apps.v1.auth.utils.auth import is_authenticated, is_verified_email
 from apps.v1.interview.schema import (
     AnswerCreateInputSchema,
     AnswerCreateOutputSchema,
@@ -34,8 +34,8 @@ async def create_chat(
 ):
     """Создает чат с новым пользователем"""
     chat_service = ChatService(session)
-    schema.user_id = user.id
-    return await chat_service.create(schema)
+    schema.user_id = user.id if isinstance(user.id, UUID) else UUID(user.id)
+    return await chat_service.create(**schema.model_dump())
 
 
 @router.get("/chat/", status_code=200, response_model=ChatListOutputSchema)
@@ -45,7 +45,10 @@ async def get_chats(
 ):
     chat_service = ChatService(session)
     return ChatListOutputSchema(
-        items=await chat_service.fetch(filters={"user_id": user.id})
+        items=[
+            ChatCreateOutputSchema.model_validate(chat)
+            for chat in await chat_service.filter(filters={"user_id": user.id})
+        ]
     )
 
 
@@ -53,11 +56,14 @@ async def get_chats(
 async def get_chat(
     chat_id: UUID,
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[UserModelSchema, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_verified_email)],
 ):
     chat_service = ChatService(session)
     chat = await chat_service.get(chat_id)
-    if chat.user_id != user.id:
+    if not chat:
+        raise exception(404, "Чат не найден")
+    user_id = user.id if isinstance(user.id, UUID) else UUID(user.id)
+    if chat.user_id != user_id:
         raise exception(403, "Доступ запрещен")
     return chat
 
