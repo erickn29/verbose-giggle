@@ -64,7 +64,7 @@ class Chat(Base):
     messages: Mapped[list["Message"]] = relationship(
         "Message", 
         back_populates="chat", 
-        lazy="joined",
+        lazy="selectin",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )

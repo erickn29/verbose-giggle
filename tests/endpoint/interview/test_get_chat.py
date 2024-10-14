@@ -23,7 +23,7 @@ async def chats(session, auth_headers):
     return {"chat_to_upd": chat_to_upd, "chat_to_del": chat_to_del}
 
 
-async def test_get_chat_200(auth_headers, client, chats):
+async def test_get_chat_200(session, auth_headers, client, chats):
     response = await client.get(
         f"api/v1/interview/chat/{str(chats['chat_to_upd'].id)}/",
         headers=auth_headers["auth_headers"],

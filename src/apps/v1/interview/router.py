@@ -18,7 +18,7 @@ from apps.v1.interview.service import (
 )
 from core.database import db_conn
 from core.exceptions import exception
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from schemas.user import UserModelSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,22 +26,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter()
 
 
-@router.post("/chat/", response_model=ChatCreateOutputSchema, status_code=201)
+@router.post("/chat/", status_code=201)
 async def create_chat(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[UserModelSchema, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_verified_email)],
     schema: ChatCreateInputSchema,
 ):
     """Создает чат с новым пользователем"""
     chat_service = ChatService(session)
     schema.user_id = user.id if isinstance(user.id, UUID) else UUID(user.id)
-    return await chat_service.create(**schema.model_dump())
+    await chat_service.create(**schema.model_dump())
+    return Response(status_code=201)
 
 
 @router.get("/chat/", status_code=200, response_model=ChatListOutputSchema)
 async def get_chats(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[UserModelSchema, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_verified_email)],
 ):
     chat_service = ChatService(session)
     return ChatListOutputSchema(
