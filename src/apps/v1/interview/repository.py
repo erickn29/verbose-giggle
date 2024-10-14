@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from apps.v1.interview.model import Answer, Chat, Evaluation, Message, Question
 from base.repository import BaseRepository
 from sqlalchemy.ext.asyncio import AsyncSession

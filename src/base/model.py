@@ -6,6 +6,7 @@ from typing import Annotated, TypeVar
 from core.settings import settings
 from sqlalchemy import UUID, MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.ext.asyncio import AsyncAttrs
 
 
 uuid_pk = Annotated[

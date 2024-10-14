@@ -24,6 +24,7 @@ async def chats(session, auth_headers):
 
 
 async def test_get_chat_200(session, auth_headers, client, chats):
+    await session.refresh(chats["chat_to_upd"])
     response = await client.get(
         f"api/v1/interview/chat/{str(chats['chat_to_upd'].id)}/",
         headers=auth_headers["auth_headers"],

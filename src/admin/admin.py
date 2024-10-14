@@ -42,8 +42,8 @@ class UserAdmin(ModelView, model=User):
         session = await anext(session_generator)
         async with session:
             await UserService(session=session).update(
-                model.id,
-                UpdateUserPassword(password=data.get("password")),
+                model,
+                **UpdateUserPassword(password=data.get("password")).model_dump(),
             )
 
 
