@@ -67,6 +67,7 @@ class Chat(Base):
         lazy="selectin",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        order_by="Message.created_at"
     )
 
 

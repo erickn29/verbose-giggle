@@ -48,7 +48,12 @@ class QuestionService(BaseService):
         chat: Chat | None = await chat_service.get(chat_id)
         if not user or not chat:
             raise exception(404, "Чат или пользователь не найдены")
-        used_question_ids = [answer.question_id for answer in user.answers]
+        user_questions_by_chat = [
+            await self.get(m.question_id)
+            for m in chat.messages
+            if m.question_id is not None
+        ]
+        # used_question_ids = [answer.question_id for answer in user.answers]
         questions_by_chat_config = await self.filter(
             {
                 "technology": {
@@ -57,32 +62,20 @@ class QuestionService(BaseService):
                 "complexity": {
                     "in": [t.get("complexity") for t in chat.config["technologies"]]
                 },
-                "id": {"not_in": used_question_ids},
+                "id": {"not_in": [q.id for q in user_questions_by_chat]},
             }
         )
         if not questions_by_chat_config:
-            questions: list[Question] = []
-            for answer in user.answers:
-                question = await self.get(answer.question_id)  # type: ignore
-                if not question:
-                    continue
-                if question in questions:
-                    questions.pop(questions.index(question))
-                    continue
-                questions.append(question)
-            if not questions:
-                raise exception(404, "Нет вопросов для данной конфигурации чата")
-            question: Question = questions[0]
-            message_service = MessageService(self.session)
-            await message_service.create(
-                **MessageCreateInputSchema(
-                    chat_id=chat_id,
-                    text=question.text,
-                    type=MessageType.QUESTION.value,
-                    question_id=question.id,
-                ).model_dump()
-            )
-            return question
+            questions_by_chat_config = await self.filter(
+            {
+                "technology": {
+                    "in": [t.get("technology") for t in chat.config["technologies"]]
+                },
+                "complexity": {
+                    "in": [t.get("complexity") for t in chat.config["technologies"]]
+                },
+            }
+        )
         question = random.choice(questions_by_chat_config)
         message_service = MessageService(self.session)
         await message_service.create(
