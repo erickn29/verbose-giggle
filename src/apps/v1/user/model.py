@@ -27,8 +27,8 @@ class User(Base):
         "Chat", back_populates="user", lazy="selectin"
     )
     answers = relationship(
-        "Answer", 
-        back_populates="user", 
+        "Answer",
+        back_populates="user",
         lazy="selectin",
         order_by="Answer.created_at",
         cascade="all, delete-orphan",

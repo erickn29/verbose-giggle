@@ -2,12 +2,13 @@ import uuid
 
 import pytest
 
-from apps.v1.interview.service import ChatService
+from apps.v1.interview.service import ChatService, MessageService
 
 
 @pytest.fixture(scope="session")
 async def chats(session, auth_headers):
     chat_service = ChatService(session)
+    message_service = MessageService(session)
 
     chat_to_upd = await chat_service.create(
         user_id=auth_headers["user"].id,
@@ -18,6 +19,17 @@ async def chats(session, auth_headers):
         user_id=auth_headers["user"].id,
         title="test_chat_to_del",
         config={"technologies": [{"technology": "php", "complexity": "easy"}]},
+    )
+
+    await message_service.create(
+        chat_id=chat_to_upd.id,
+        text="test_message_1",
+        type="question",
+    )
+    await message_service.create(
+        chat_id=chat_to_upd.id,
+        text="test_message_2",
+        type="answer",
     )
 
     return {"chat_to_upd": chat_to_upd, "chat_to_del": chat_to_del}
@@ -33,7 +45,9 @@ async def test_get_chat_200(session, auth_headers, client, chats):
     assert response.json()["id"] == str(chats["chat_to_upd"].id)
     assert response.json()["title"] == "test_chat_to_upd"
     assert response.json()["config"]["technologies"][0]["technology"] == "php"
-    assert response.json()["messages"] == []
+    assert len(response.json()["messages"]) == 2
+    assert response.json()["messages"][0]["text"] == "test_message_1"
+    assert response.json()["messages"][1]["text"] == "test_message_2"
 
 
 async def test_get_chat_401(auth_headers, client, chats):

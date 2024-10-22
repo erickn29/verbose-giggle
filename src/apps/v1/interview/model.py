@@ -33,7 +33,7 @@ class Answer(Base):
         doc="Пользователь",
     )
 
-    question = relationship("Question", back_populates="answers", lazy="selectin")
+    question = relationship("Question", back_populates="answers", lazy="joined")
     user = relationship("User", back_populates="answers", lazy="joined")
     evaluations = relationship("Evaluation", back_populates="answer", lazy="selectin")
 
@@ -62,8 +62,8 @@ class Chat(Base):
 
     user = relationship("User", back_populates="chats", lazy="joined")
     messages: Mapped[list["Message"]] = relationship(
-        "Message", 
-        back_populates="chat", 
+        "Message",
+        back_populates="chat",
         lazy="selectin",
         cascade="all, delete-orphan",
         passive_deletes=True,

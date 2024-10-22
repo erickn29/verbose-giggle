@@ -108,7 +108,6 @@ async def auth_headers(client, session):
     data = {
         "email": user.email,
         "password": "test_password",
-        "is_verified": True,
     }
     await user_service.update(user, is_verified=True)
 
@@ -130,7 +129,6 @@ async def auth_headers(client, session):
     data = {
         "email": user2.email,
         "password": "test_password",
-        "is_verified": True,
     }
     await user_service.update(user2, is_verified=True)
 
@@ -159,6 +157,25 @@ async def auth_headers(client, session):
                 "Authorization": f"Bearer {response.json()['access_token']}"
             },
             "user3": user3,
+        }
+    )
+    user4 = await user_service.create(
+        email="user_base4@example.com",
+        password="test_password",
+    )
+    data = {
+        "email": user4.email,
+        "password": "test_password",
+    }
+    await user_service.update(user4, is_verified=True)
+
+    response = await client.post("/api/v1/auth/login/", json=data)
+    returned_data.update(
+        {
+            "auth_headers4": {
+                "Authorization": f"Bearer {response.json()['access_token']}"
+            },
+            "user4": user4,
         }
     )
     return returned_data

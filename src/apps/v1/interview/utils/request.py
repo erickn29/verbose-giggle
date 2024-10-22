@@ -1,7 +1,7 @@
 import aiohttp
 
 
-async def get_evaluation(url: str, data: dict):
+async def get_evaluation_request(url: str, data: dict):
     async with (
         aiohttp.ClientSession() as session,
         session.post(

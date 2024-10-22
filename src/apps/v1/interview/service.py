@@ -17,7 +17,7 @@ from apps.v1.interview.schema import (
     MessageCreateInputSchema,
     MessageType,
 )
-from apps.v1.interview.utils.request import get_evaluation
+from apps.v1.interview.utils import request
 from apps.v1.user.model import User
 from apps.v1.user.service import UserService
 from base.service import BaseService
@@ -47,7 +47,7 @@ class QuestionService(BaseService):
         user: User | None = await user_service.get(user_schema.id)
         chat: Chat | None = await chat_service.get(chat_id)
         if not user or not chat:
-            raise Exception(404, "Чат или пользователь не найдены")
+            raise exception(404, "Чат или пользователь не найдены")
         used_question_ids = [answer.question_id for answer in user.answers]
         questions_by_chat_config = await self.filter(
             {
@@ -63,7 +63,7 @@ class QuestionService(BaseService):
         if not questions_by_chat_config:
             questions: list[Question] = []
             for answer in user.answers:
-                question = await self.get(answer.question_id) # type: ignore
+                question = await self.get(answer.question_id)  # type: ignore
                 if not question:
                     continue
                 if question in questions:
@@ -115,8 +115,8 @@ class AnswerService(BaseService):
 
         chat = await chat_service.get(chat_id)
         if not chat:
-            raise Exception(404, "Чат не найден")
-        answer = await self.create(**schema.model_dump())
+            raise exception(404, "Чат не найден")
+        answer: Answer = await self.create(**schema.model_dump())
         await message_service.create(
             **MessageCreateInputSchema(
                 chat_id=chat.id,
@@ -150,12 +150,12 @@ class EvaluationService(BaseService):
         - что сказано неверно
         - рекомендации
         """
-        question = answer.question
+        question = await answer.awaitable_attrs.question
         user_answer = f"""
         Вопрос: {question.text}.
         Ответ: {answer.text}.
         """
-        response = await get_evaluation(
+        response = await request.get_evaluation_request(
             url=settings.ai.SERVICE_URL,
             data={
                 "messages": [
@@ -197,7 +197,7 @@ class EvaluationService(BaseService):
                 evaluation_id=evaluation.id,
             ).model_dump()
         )
-        if "Оценка: " in evaluation_text and "/10" in evaluation_text:
+        if "Оценка" in evaluation_text and "/10" in evaluation_text:
             eval_string = evaluation_text.split("/10")[0]
             eval_num = eval_string.split(" ")[-1]
             if eval_num.isdigit():

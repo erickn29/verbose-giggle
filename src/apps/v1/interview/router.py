@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from apps.v1.auth.utils.auth import is_authenticated, is_verified_email
+from apps.v1.auth.utils.auth import is_verified_email
 from apps.v1.interview.schema import (
     AnswerCreateInputSchema,
     AnswerCreateOutputSchema,
@@ -72,7 +72,7 @@ async def get_chat(
 @router.get("/q/{chat_id}/", status_code=200, response_model=QuestionOutputSchema)
 async def send_question(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[UserModelSchema, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_verified_email)],
     chat_id: UUID,
 ):
     """Генерирует и отправляет вопрос пользователю"""
@@ -84,7 +84,7 @@ async def send_question(
 @router.post("/a/{chat_id}/", status_code=201, response_model=AnswerCreateOutputSchema)
 async def get_answer(
     session: Annotated[AsyncSession, Depends(db_conn.get_session)],
-    user: Annotated[UserModelSchema, Depends(is_authenticated)],
+    user: Annotated[UserModelSchema, Depends(is_verified_email)],
     chat_id: UUID,
     schema: AnswerCreateInputSchema,
 ):

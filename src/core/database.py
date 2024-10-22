@@ -1,5 +1,4 @@
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 
 from core.settings import settings
 from sqlalchemy.ext.asyncio import (

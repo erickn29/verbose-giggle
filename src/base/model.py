@@ -5,8 +5,8 @@ from typing import Annotated, TypeVar
 
 from core.settings import settings
 from sqlalchemy import UUID, MetaData
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 uuid_pk = Annotated[
@@ -29,7 +29,7 @@ updated_at = Annotated[
 ]
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     metadata = MetaData(naming_convention=settings.db.naming_convention)
     # __table_args__ = {'extend_existing': True}
 

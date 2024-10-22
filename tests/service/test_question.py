@@ -161,10 +161,10 @@ async def test_get_question(session, questions, auth_headers):
         question_4 = await question_service.get_question(
             questions["chat"].id, UserModelSchema.model_validate(auth_headers["user"])
         )
-        
+
     assert isinstance(question_4, Question)
     assert question_4.id == question_1.id
-        
+
     async with session:
         answer_service = AnswerService(session)
         await answer_service.create(
@@ -173,7 +173,7 @@ async def test_get_question(session, questions, auth_headers):
             question_id=question_4.id,
             user_id=auth_headers["user"].id,
         )
-    
+
     async with session:
         question_service = QuestionService(session)
         question_5 = await question_service.get_question(
@@ -181,7 +181,7 @@ async def test_get_question(session, questions, auth_headers):
         )
     assert isinstance(question_5, Question)
     assert question_5.id == question_2.id
-    
+
     async with session:
         answer_service = AnswerService(session)
         await answer_service.create(
@@ -190,7 +190,7 @@ async def test_get_question(session, questions, auth_headers):
             question_id=question_5.id,
             user_id=auth_headers["user"].id,
         )
-    
+
     async with session:
         question_service = QuestionService(session)
         question_6 = await question_service.get_question(
@@ -198,7 +198,7 @@ async def test_get_question(session, questions, auth_headers):
         )
     assert isinstance(question_6, Question)
     assert question_6.id == question_3.id
-    
+
     async with session:
         answer_service = AnswerService(session)
         await answer_service.create(
